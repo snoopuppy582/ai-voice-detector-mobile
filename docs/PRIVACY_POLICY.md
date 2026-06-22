@@ -20,6 +20,8 @@ AI Voice Detector may access:
 
 The app uses this data only to provide the voice estimate feature.
 
+The current MVP does not include advertising SDKs, analytics SDKs, crash reporting SDKs, account login, or cloud inference. If any of these are added later, this policy and the Google Play Data Safety form must be reviewed again.
+
 ## Microphone Permission
 
 The app requests microphone permission only when the user uses the recording feature. If the user denies permission, the app cannot record or analyze a voice sample.
@@ -27,6 +29,8 @@ The app requests microphone permission only when the user uses the recording fea
 ## Audio Storage
 
 The current MVP analyzes audio in memory. Voice samples are not intentionally uploaded, shared, or stored on a remote server. Starting a new recording clears the previous sample from the app's in-memory analysis flow.
+
+Users can also delete local app data by uninstalling the app or clearing the app's storage in Android system settings.
 
 ## Data Sharing
 
@@ -76,6 +80,8 @@ AI Voice Detector는 다음 데이터에 접근할 수 있습니다.
 
 앱은 이 데이터를 음성 추정 기능 제공 목적으로만 사용합니다.
 
+현재 MVP에는 광고 SDK, 분석 SDK, 크래시 리포팅 SDK, 계정 로그인, 클라우드 추론 기능이 포함되어 있지 않습니다. 향후 이러한 기능을 추가하는 경우, 이 정책과 Google Play Data Safety 양식을 다시 검토해야 합니다.
+
 ## 마이크 권한
 
 앱은 사용자가 녹음 기능을 사용할 때만 마이크 권한을 요청합니다. 사용자가 권한을 거부하면 음성을 녹음하거나 분석할 수 없습니다.
@@ -83,6 +89,8 @@ AI Voice Detector는 다음 데이터에 접근할 수 있습니다.
 ## 오디오 저장
 
 현재 MVP는 음성을 메모리에서 분석합니다. 음성 샘플은 의도적으로 서버에 업로드되거나 제3자에게 공유되지 않습니다. 새 녹음을 시작하면 이전 샘플은 앱의 메모리 기반 분석 흐름에서 지워집니다.
+
+사용자는 앱을 삭제하거나 Android 시스템 설정에서 앱 저장공간을 삭제해 로컬 앱 데이터를 지울 수 있습니다.
 
 ## 데이터 공유
 

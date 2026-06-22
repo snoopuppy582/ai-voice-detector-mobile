@@ -47,7 +47,7 @@ Temporary fallback if using the existing GitHub Pages repo:
 
 For the current MVP:
 
-- Does your app collect or share user data? Usually `No`, if no analytics/crash/ad SDK sends data and audio never leaves the device.
+- Does your app collect or share user data? `No`, if this exact MVP is submitted without analytics, crash reporting, ads, cloud inference, remote logs, or any other SDK/network feature that sends user data off the device.
 - Microphone permission: used for app functionality.
 - Audio data: processed on device only.
 - Account creation: not supported.
@@ -55,6 +55,8 @@ For the current MVP:
 - Encryption in transit: not applicable for audio if no server upload.
 
 Important: If any analytics, crash reporting, ads, cloud inference, or server upload is added, update this answer.
+
+Do not say the app does not handle sensitive data. It accesses microphone audio locally. The safer phrasing is: the app accesses microphone audio only for the user-triggered recording feature, processes it on device, and does not collect or share it off device.
 
 ## Content Rating
 

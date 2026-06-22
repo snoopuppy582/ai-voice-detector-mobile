@@ -16,7 +16,6 @@ import { requestRecordingPermissionsAsync, setAudioModeAsync, useAudioStream } f
 const TARGET_SAMPLE_RATE = 16000;
 const MAX_SECONDS = 12;
 const MIN_SECONDS = 2;
-const MAX_SAMPLES = TARGET_SAMPLE_RATE * MAX_SECONDS;
 
 const COPY = {
   en: {
@@ -44,6 +43,7 @@ const COPY = {
     delete: 'Samples are cleared when you start a new recording.',
     sampleHint: 'Speak naturally for 3-8 seconds in a quiet place.',
     tooShort: 'Record at least 2 seconds of speech.',
+    tooQuiet: 'The sample is too quiet. Move closer to the microphone and try again.',
     permissionTitle: 'Microphone permission needed',
     permissionBody: 'Allow microphone access to record and analyze a short voice sample.',
     language: 'KO',
@@ -74,6 +74,7 @@ const COPY = {
     delete: '새 녹음을 시작하면 이전 샘플은 앱 메모리에서 지워집니다.',
     sampleHint: '조용한 곳에서 3-8초 동안 자연스럽게 말하세요.',
     tooShort: '최소 2초 이상 음성을 녹음하세요.',
+    tooQuiet: '음성이 너무 작습니다. 마이크에 조금 더 가까이 대고 다시 녹음하세요.',
     permissionTitle: '마이크 권한 필요',
     permissionBody: '짧은 음성을 녹음하고 분석하려면 마이크 접근을 허용해야 합니다.',
     language: 'EN',
@@ -305,9 +306,9 @@ function makeBarsFromSamples(samples, count) {
   return bars;
 }
 
-function mergeChunks(chunks) {
+function mergeChunks(chunks, maxSamples) {
   const total = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-  const output = new Float32Array(Math.min(total, MAX_SAMPLES));
+  const output = new Float32Array(Math.min(total, maxSamples));
   let offset = 0;
   for (const chunk of chunks) {
     if (offset >= output.length) break;
@@ -360,6 +361,8 @@ export default function App() {
   const copy = COPY[language];
   const chunksRef = useRef([]);
   const sampleRateRef = useRef(TARGET_SAMPLE_RATE);
+  const sampleCountRef = useRef(0);
+  const elapsedRef = useRef(0);
   const recordingRef = useRef(false);
   const timerRef = useRef(null);
 
@@ -371,8 +374,13 @@ export default function App() {
 
     const channels = Math.max(buffer.channels || 1, 1);
     const mono = channels === 1 ? samples : samples.filter((_, index) => index % channels === 0);
-    const currentTotal = chunksRef.current.reduce((sum, chunk) => sum + chunk.length, 0);
-    if (currentTotal < MAX_SAMPLES) chunksRef.current.push(mono);
+    const maxSamples = Math.ceil(sampleRateRef.current * MAX_SECONDS);
+    const remaining = maxSamples - sampleCountRef.current;
+    if (remaining > 0) {
+      const slice = mono.length > remaining ? mono.subarray(0, remaining) : mono;
+      chunksRef.current.push(slice);
+      sampleCountRef.current += slice.length;
+    }
     setLevelBars(makeBarsFromSamples(mono, 28));
   }, []);
 
@@ -415,20 +423,21 @@ export default function App() {
 
     chunksRef.current = [];
     sampleRateRef.current = TARGET_SAMPLE_RATE;
+    sampleCountRef.current = 0;
+    elapsedRef.current = 0;
     setResult(null);
     setElapsed(0);
     setLevelBars(new Array(28).fill(0.12));
     recordingRef.current = true;
     setIsRecording(true);
     timerRef.current = setInterval(() => {
-      setElapsed((value) => {
-        const next = Number((value + 0.1).toFixed(1));
-        if (next >= MAX_SECONDS) {
-          stopRecording();
-          return MAX_SECONDS;
-        }
-        return next;
-      });
+      elapsedRef.current = Number((elapsedRef.current + 0.1).toFixed(1));
+      if (elapsedRef.current >= MAX_SECONDS) {
+        setElapsed(MAX_SECONDS);
+        stopRecording();
+        return;
+      }
+      setElapsed(elapsedRef.current);
     }, 100);
 
     try {
@@ -445,7 +454,10 @@ export default function App() {
     if (!recordingRef.current) return;
     recordingRef.current = false;
     setIsRecording(false);
-    if (timerRef.current) clearInterval(timerRef.current);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
 
     try {
       await stream.stop();
@@ -455,11 +467,18 @@ export default function App() {
 
     setIsAnalyzing(true);
     setTimeout(() => {
-      const samples = mergeChunks(chunksRef.current);
       const sampleRate = sampleRateRef.current || TARGET_SAMPLE_RATE;
+      const maxSamples = Math.ceil(sampleRate * MAX_SECONDS);
+      const samples = mergeChunks(chunksRef.current, maxSamples);
       if (samples.length < sampleRate * MIN_SECONDS) {
         setIsAnalyzing(false);
         Alert.alert(copy.result, copy.tooShort);
+        return;
+      }
+      const rms = Math.sqrt(samples.reduce((sum, value) => sum + value * value, 0) / samples.length);
+      if (rms < 0.006) {
+        setIsAnalyzing(false);
+        Alert.alert(copy.result, copy.tooQuiet);
         return;
       }
       const nextResult = analyzeSamples(samples, sampleRate);
