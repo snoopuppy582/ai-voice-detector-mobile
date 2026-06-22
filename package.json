@@ -1,0 +1,24 @@
+{
+  "name": "ai-voice-detector-mobile",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "expo": "~56.0.12",
+    "expo-asset": "~56.0.17",
+    "expo-audio": "~56.0.12",
+    "expo-localization": "~56.0.6",
+    "expo-status-bar": "~56.0.4",
+    "react": "19.2.3",
+    "react-native": "0.85.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "doctor": "expo-doctor",
+    "build:apk": "npx eas-cli build -p android --profile preview",
+    "build:aab": "npx eas-cli build -p android --profile production"
+  },
+  "private": true
+}

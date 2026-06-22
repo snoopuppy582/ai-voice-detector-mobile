@@ -1,0 +1,11 @@
+node_modules/
+.expo/
+dist/
+dist-android/
+web-build/
+
+docs/
+server/
+web-demo/
+store-assets/
+assets/original_expo_defaults/

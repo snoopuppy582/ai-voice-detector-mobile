@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "AI Voice Detector",
+    "slug": "ai-voice-detector-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.snoopuppy582.aivoicedetector",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow AI Voice Detector to analyze short voice samples on this device.",
+          "recordAudioAndroid": true,
+          "enableBackgroundRecording": false,
+          "enableBackgroundPlayback": false
+        }
+      ],
+      "expo-localization",
+      "expo-asset"
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "owner": "snoopy554"
+  }
+}

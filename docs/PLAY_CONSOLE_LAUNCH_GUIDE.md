@@ -1,0 +1,118 @@
+# AI Voice Detector Play Console Launch Guide
+
+## App Setup
+
+- App name: `AI Voice Detector`
+- Package name: `com.snoopuppy582.aivoicedetector`
+- App type: App
+- Pricing: Free
+- Default language: English
+- Add Korean store listing after English listing is complete
+
+## Upload Build
+
+Build AAB:
+
+```bash
+npm run build:aab
+```
+
+Upload the generated `.aab` to:
+
+`Play Console > Test and release > Testing > Closed testing > Create release`
+
+For a new personal developer account, prepare for 12 testers / 14 days before production access.
+
+## Store Listing Assets
+
+- App icon: `store-assets/icons/play_icon_512.png`
+- Feature graphic: `store-assets/feature_graphic/feature_graphic_1024x500.png`
+- Phone screenshots:
+  - `store-assets/screenshots_phone/01_record_1080x1920.png`
+  - `store-assets/screenshots_phone/02_signals_1080x1920.png`
+  - `store-assets/screenshots_phone/03_result_1080x1920.png`
+  - `store-assets/screenshots_phone/04_privacy_1080x1920.png`
+
+## Privacy Policy
+
+Use the public URL after GitHub Pages is prepared:
+
+`https://snoopuppy582.github.io/ai-voice-detector-mobile/privacy-policy.html`
+
+Temporary fallback if using the existing GitHub Pages repo:
+
+`https://snoopuppy582.github.io/voicetrace-mobile/ai-voice-detector-privacy-policy.html`
+
+## Data Safety Direction
+
+For the current MVP:
+
+- Does your app collect or share user data? Usually `No`, if no analytics/crash/ad SDK sends data and audio never leaves the device.
+- Microphone permission: used for app functionality.
+- Audio data: processed on device only.
+- Account creation: not supported.
+- Data deletion: no account data; temporary sample clears on new recording.
+- Encryption in transit: not applicable for audio if no server upload.
+
+Important: If any analytics, crash reporting, ads, cloud inference, or server upload is added, update this answer.
+
+## Content Rating
+
+Suggested framing:
+
+- Utility / tools app
+- No user-generated public sharing
+- No gambling, violence, sexual content, medical diagnosis, legal evidence, or security authentication
+- Contains microphone-based acoustic analysis
+
+## Target Audience
+
+Recommended:
+
+- Not designed for children
+- Target age: adults / general users, depending on Play Console choices
+
+## Claims To Avoid
+
+Do not use:
+
+- `100% accurate`
+- `guaranteed detection`
+- `detects every AI voice`
+- `deepfake proof`
+- `legal evidence`
+- `court-grade`
+- `security authentication`
+- `medical diagnosis`
+
+Use:
+
+- `AI voice estimate`
+- `acoustic signals`
+- `on-device privacy`
+- `may be incorrect`
+- `verify important messages through another trusted channel`
+
+## Closed Testing
+
+Recruit 15-20 testers, not exactly 12.
+
+Required:
+
+- Android phone
+- Gmail used for Google Play
+- Opt-in link opened with the same Google account
+- Stay opted in for 14 days
+- Install and use the app at least once
+
+Ask testers to try:
+
+- Microphone permission accept
+- Microphone permission deny
+- 3-8 second recording
+- Very short recording
+- Result screen
+- Language toggle
+- Privacy policy link
+
+Keep a feedback log with date, device, version, issue, and fix status.
