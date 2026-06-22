@@ -43,6 +43,10 @@ const COPY = {
     hnr: 'HNR',
     hfRatio: 'HF Ratio',
     cpps: 'CPPS',
+    f0Std: 'F0 Var',
+    voicedRatio: 'Voiced',
+    flatness: 'Flatness',
+    centroid: 'Centroid',
     privacy: 'Processed on device. No account required.',
     delete: 'Samples are cleared when you start a new recording.',
     privacyPolicy: 'Privacy policy',
@@ -76,6 +80,10 @@ const COPY = {
     hnr: 'HNR',
     hfRatio: 'HF Ratio',
     cpps: 'CPPS',
+    f0Std: 'F0 변화',
+    voicedRatio: '유성 비율',
+    flatness: '평탄도',
+    centroid: '중심 주파수',
     privacy: '기기 내에서 처리됩니다. 계정은 필요하지 않습니다.',
     delete: '새 녹음을 시작하면 이전 샘플은 앱 메모리에서 지워집니다.',
     privacyPolicy: '개인정보처리방침',
@@ -98,6 +106,17 @@ function median(values) {
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function mean(values) {
+  if (!values.length) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function standardDeviation(values) {
+  if (values.length < 2) return 0;
+  const avg = mean(values);
+  return Math.sqrt(values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / values.length);
 }
 
 function nextPowerOfTwo(value) {
@@ -173,7 +192,7 @@ function windowedFrame(frame) {
   return output;
 }
 
-function estimateHnr(frame, sampleRate) {
+function estimatePitchAndHnr(frame, sampleRate) {
   let mean = 0;
   for (let i = 0; i < frame.length; i += 1) mean += frame[i];
   mean /= frame.length;
@@ -184,20 +203,35 @@ function estimateHnr(frame, sampleRate) {
     centered[i] = frame[i] - mean;
     energy += centered[i] * centered[i];
   }
-  if (energy <= 1e-8) return 0;
+  if (energy <= 1e-8) {
+    return {
+      hnr: 0,
+      f0: 0,
+      harmonicity: 0,
+    };
+  }
 
   const minLag = Math.max(1, Math.floor(sampleRate / 350));
   const maxLag = Math.min(centered.length - 1, Math.floor(sampleRate / 60));
   let best = 0;
+  let bestLag = 0;
   for (let lag = minLag; lag <= maxLag; lag += 1) {
     let corr = 0;
     for (let i = 0; i < centered.length - lag; i += 1) {
       corr += centered[i] * centered[i + lag];
     }
-    best = Math.max(best, corr / energy);
+    const normalized = corr / energy;
+    if (normalized > best) {
+      best = normalized;
+      bestLag = lag;
+    }
   }
   const harmonicity = clamp(best, 0.01, 0.99);
-  return 10 * Math.log10(harmonicity / Math.max(1 - harmonicity, 1e-6));
+  return {
+    hnr: 10 * Math.log10(harmonicity / Math.max(1 - harmonicity, 1e-6)),
+    f0: bestLag && best >= 0.35 ? sampleRate / bestLag : 0,
+    harmonicity: best,
+  };
 }
 
 function estimateSpectralFeatures(frame, sampleRate) {
@@ -210,13 +244,21 @@ function estimateSpectralFeatures(frame, sampleRate) {
 
   let total = 0;
   let high = 0;
+  let centroidNumerator = 0;
+  let logPowerSum = 0;
+  let binCount = 0;
   const logMag = new Array(n);
   const threshold = Math.min(4000, sampleRate * 0.35);
   for (let i = 0; i < n; i += 1) {
     const mag2 = real[i] * real[i] + imag[i] * imag[i];
-    total += mag2;
     const frequency = (i * sampleRate) / n;
-    if (i <= n / 2 && frequency >= threshold) high += mag2;
+    if (i <= n / 2) {
+      total += mag2;
+      centroidNumerator += frequency * mag2;
+      logPowerSum += Math.log(mag2 + 1e-12);
+      binCount += 1;
+      if (frequency >= threshold) high += mag2;
+    }
     logMag[i] = Math.log(Math.sqrt(mag2) + 1e-8);
   }
 
@@ -239,6 +281,8 @@ function estimateSpectralFeatures(frame, sampleRate) {
 
   return {
     hfRatio: total > 1e-8 ? clamp(high / total, 0, 1) : 0,
+    spectralCentroid: total > 1e-8 ? centroidNumerator / total : 0,
+    spectralFlatness: total > 1e-8 && binCount ? clamp(Math.exp(logPowerSum / binCount) / (total / binCount), 0, 1) : 0,
     cpps,
   };
 }
@@ -260,30 +304,56 @@ function analyzeSamples(samples, sampleRate) {
   const hnrValues = [];
   const hfValues = [];
   const cppsValues = [];
+  const f0Values = [];
+  const flatnessValues = [];
+  const centroidValues = [];
   analysisFrames.forEach((frame) => {
-    hnrValues.push(estimateHnr(windowedFrame(frame), sampleRate));
+    const pitch = estimatePitchAndHnr(windowedFrame(frame), sampleRate);
+    hnrValues.push(pitch.hnr);
+    if (pitch.f0 > 0) f0Values.push(pitch.f0);
     const spectral = estimateSpectralFeatures(frame, sampleRate);
     hfValues.push(spectral.hfRatio);
     cppsValues.push(spectral.cpps);
+    flatnessValues.push(spectral.spectralFlatness);
+    centroidValues.push(spectral.spectralCentroid);
   });
 
   const hnr = median(hnrValues);
   const hfRatio = median(hfValues);
   const cpps = median(cppsValues);
+  const f0Mean = mean(f0Values);
+  const f0Std = standardDeviation(f0Values);
+  const f0Range = f0Values.length ? Math.max(...f0Values) - Math.min(...f0Values) : 0;
+  const voicedRatio = analysisFrames.length ? f0Values.length / analysisFrames.length : 0;
+  const spectralFlatness = median(flatnessValues);
+  const spectralCentroid = median(centroidValues);
   let zcr = 0;
   for (let i = 1; i < samples.length; i += 1) {
     if ((samples[i - 1] >= 0) !== (samples[i] >= 0)) zcr += 1;
   }
   zcr /= Math.max(samples.length - 1, 1);
 
+  const pitchMonotonyRisk =
+    voicedRatio > 0.25 ? clamp((22 - f0Std) * 0.45, 0, 7) + clamp((90 - f0Range) * 0.05, 0, 5) : 0;
+  const flatnessRisk = clamp((spectralFlatness - 0.22) * 35, -5, 8);
+  const centroidRisk = clamp((spectralCentroid - 1800) / 260, -4, 7);
+
   const aiScore = clamp(
-    50 + clamp((14 - hnr) * 2.2, -18, 28) + clamp((hfRatio - 0.24) * 90, -20, 32) + clamp((12 - cpps) * 2, -15, 22) + clamp((zcr - 0.08) * 80, -8, 12),
+    50 +
+      clamp((14 - hnr) * 2.2, -18, 28) +
+      clamp((hfRatio - 0.24) * 80, -18, 28) +
+      clamp((12 - cpps) * 1.8, -14, 20) +
+      clamp((zcr - 0.08) * 70, -8, 11) +
+      pitchMonotonyRisk +
+      flatnessRisk +
+      centroidRisk,
     4,
     96
   );
 
-  const label = aiScore >= 58 ? 'likelyAi' : aiScore <= 42 ? 'likelyHuman' : 'uncertain';
-  const confidence = clamp(Math.round(54 + Math.abs(aiScore - 50) * 1.25), 51, 94);
+  const lowVoicedPenalty = voicedRatio < 0.25 ? 12 : voicedRatio < 0.4 ? 6 : 0;
+  const label = lowVoicedPenalty >= 12 ? 'uncertain' : aiScore >= 58 ? 'likelyAi' : aiScore <= 42 ? 'likelyHuman' : 'uncertain';
+  const confidence = clamp(Math.round(54 + Math.abs(aiScore - 50) * 1.25 - lowVoicedPenalty), 45, 94);
   const bars = makeBarsFromSamples(samples, 28);
 
   return {
@@ -293,6 +363,12 @@ function analyzeSamples(samples, sampleRate) {
     hnr: Number(hnr.toFixed(1)),
     hfRatio: Number(hfRatio.toFixed(2)),
     cpps: Number(cpps.toFixed(1)),
+    f0Mean: Number(f0Mean.toFixed(1)),
+    f0Std: Number(f0Std.toFixed(1)),
+    f0Range: Number(f0Range.toFixed(1)),
+    voicedRatio: Number(voicedRatio.toFixed(2)),
+    spectralFlatness: Number(spectralFlatness.toFixed(2)),
+    spectralCentroid: Math.round(spectralCentroid),
     zcr: Number(zcr.toFixed(3)),
     duration: Number((samples.length / sampleRate).toFixed(1)),
     bars,
@@ -616,6 +692,10 @@ export default function App() {
               <SignalCard label={copy.hnr} value={result.hnr.toFixed(1)} unit="dB" />
               <SignalCard label={copy.hfRatio} value={result.hfRatio.toFixed(2)} />
               <SignalCard label={copy.cpps} value={result.cpps.toFixed(1)} unit="dB" />
+              <SignalCard label={copy.f0Std} value={result.f0Std.toFixed(1)} unit="Hz" />
+              <SignalCard label={copy.voicedRatio} value={`${Math.round(result.voicedRatio * 100)}`} unit="%" />
+              <SignalCard label={copy.flatness} value={result.spectralFlatness.toFixed(2)} />
+              <SignalCard label={copy.centroid} value={`${result.spectralCentroid}`} unit="Hz" />
             </View>
           </View>
         ) : null}
@@ -827,11 +907,13 @@ const styles = StyleSheet.create({
   },
   signalGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
     marginTop: 10,
   },
   signalCard: {
-    flex: 1,
+    flexBasis: '48%',
+    flexGrow: 1,
     minHeight: 82,
     backgroundColor: '#F8FBFD',
     borderRadius: 8,

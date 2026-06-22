@@ -135,8 +135,8 @@ def make_feature_graphic() -> None:
     draw = ImageDraw.Draw(bg)
 
     draw.text((58, 80), "AI voice estimate", font=font(54, True), fill=(255, 255, 255, 255))
-    draw.text((60, 154), "Acoustic signals. On-device privacy.", font=font(25), fill=(197, 225, 237, 255))
-    chips = [("HNR", CYAN), ("HF Ratio", TEAL), ("CPPS", LIME)]
+    draw.text((60, 154), "Pitch, cepstral and spectral cues.", font=font(25), fill=(197, 225, 237, 255))
+    chips = [("HNR", CYAN), ("F0 Var", TEAL), ("Flatness", LIME)]
     x = 60
     for label, color in chips:
         w = int(draw.textlength(label, font=font(21, True))) + 34
@@ -177,14 +177,25 @@ def draw_phone_ui(draw, title, caption, mode):
     elif mode == "signals":
         draw.text((x + 46, y + 176), "Check voice notes and samples", font=font(34, True), fill=INK)
         draw_wave(draw, x + 70, y + 250, w - 140, 170, color=CYAN, bars=36, phase=1.2)
-        metrics = [("HNR", "11.8 dB", CYAN), ("HF Ratio", "0.39", TEAL), ("CPPS", "9.4 dB", LIME)]
+        metrics = [
+            ("HNR", "11.8 dB", CYAN),
+            ("HF Ratio", "0.39", TEAL),
+            ("CPPS", "9.4 dB", LIME),
+            ("F0 Var", "18.5 Hz", CYAN),
+            ("Voiced", "86%", TEAL),
+            ("Flatness", "0.27", LIME),
+        ]
         px = x + 46
+        py = y + 490
         for label, value, color in metrics:
-            rounded_rect(draw, (px, y + 490, px + 265, y + 645), radius=22, fill=(248, 251, 253, 255), outline=LINE)
-            draw.text((px + 24, y + 516), label, font=font(24, True), fill=MUTED)
-            draw.text((px + 24, y + 560), value, font=font(40, True), fill=INK)
+            rounded_rect(draw, (px, py, px + 265, py + 128), radius=22, fill=(248, 251, 253, 255), outline=LINE)
+            draw.text((px + 24, py + 22), label, font=font(23, True), fill=MUTED)
+            draw.text((px + 24, py + 62), value, font=font(32, True), fill=INK)
             px += 287
-        rows = [("Plain signal summary", "HNR, HF Ratio, and CPPS-style cues"), ("Noise and high-frequency cues", "Used for the estimate")]
+            if px + 265 > x + w - 46:
+                px = x + 46
+                py += 150
+        rows = [("Pitch and periodicity", "F0 variation, HNR, and CPPS-style cues"), ("Spectrum and noise cues", "HF ratio and flatness support the estimate")]
     elif mode == "result":
         draw.text((x + 46, y + 176), "See a clear confidence score", font=font(34, True), fill=INK)
         rounded_rect(draw, (x + 46, y + 250, x + w - 46, y + 530), radius=24, fill=(255, 246, 246, 255), outline=(244, 206, 206, 255))
@@ -192,13 +203,17 @@ def draw_phone_ui(draw, title, caption, mode):
         draw.text((x + 88, y + 370), "Confidence 78%", font=font(30, True), fill=INK)
         draw.rounded_rectangle((x + 86, y + 438, x + w - 86, y + 472), radius=17, fill=(235, 240, 245, 255))
         draw.rounded_rectangle((x + 86, y + 438, x + 86 + int((w - 172) * 0.78), y + 472), radius=17, fill=CORAL)
-        metrics = [("HNR", "11.8 dB"), ("HF Ratio", "0.39"), ("CPPS", "9.4 dB")]
+        metrics = [("HNR", "11.8 dB"), ("F0 Var", "18.5 Hz"), ("HF Ratio", "0.39"), ("Flatness", "0.27")]
         px = x + 46
+        py = y + 610
         for label, value in metrics:
-            rounded_rect(draw, (px, y + 610, px + 265, y + 750), radius=22, fill=(248, 251, 253, 255), outline=LINE)
-            draw.text((px + 22, y + 633), label, font=font(24, True), fill=MUTED)
-            draw.text((px + 22, y + 678), value, font=font(36, True), fill=INK)
-            px += 287
+            rounded_rect(draw, (px, py, px + 408, py + 126), radius=22, fill=(248, 251, 253, 255), outline=LINE)
+            draw.text((px + 22, py + 21), label, font=font(23, True), fill=MUTED)
+            draw.text((px + 22, py + 62), value, font=font(32, True), fill=INK)
+            px += 430
+            if px + 408 > x + w - 46:
+                px = x + 46
+                py += 148
         rows = [("Estimate only", "May be incorrect"), ("Verify another way", "Call the person through a trusted channel")]
     else:
         draw.text((x + 46, y + 176), "Private by design", font=font(34, True), fill=INK)
@@ -213,6 +228,8 @@ def draw_phone_ui(draw, title, caption, mode):
         draw.arc((x + 420, y + 348, x + 520, y + 454), 200, -20, fill=TEAL, width=12)
 
     yy = y + 1080 if mode == "record" else y + 840
+    if mode == "result":
+        yy = y + 1130
     if mode == "privacy":
         yy = y + 650
     for heading, body in rows:

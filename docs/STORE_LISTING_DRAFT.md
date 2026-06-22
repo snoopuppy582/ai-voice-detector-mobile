@@ -20,13 +20,13 @@ Korean:
 
 AI Voice Scam Detector helps you check suspicious voices for AI cloning, scams, and deepfake audio using acoustic signals on your Android device.
 
-Record a short voice clip to see whether it sounds human or AI-generated, with a clear confidence score. The app reviews HNR, HF Ratio, and a CPPS-style cepstral signal on device.
+Record a short voice clip to see whether it sounds human or AI-generated, with a clear confidence score. The app reviews HNR, HF Ratio, a CPPS-style cepstral signal, F0 variation, voiced ratio, and lightweight spectral signals on device.
 
 Main features:
 
 - Record a suspicious voice sample
 - On-device acoustic signal analysis
-- HNR, HF Ratio, and CPPS-style signal cards
+- HNR, HF Ratio, CPPS-style, F0 variation, voiced ratio, and spectral signal cards
 - AI voice estimate with confidence score
 - English and Korean interface
 - No account required
@@ -47,13 +47,13 @@ AI Voice Scam Detector is an acoustic estimate tool. It may be wrong. Do not use
 
 AI Voice Scam Detector는 수상한 음성의 AI 클론, 보이스피싱, 딥페이크 오디오 위험을 Android 기기 안에서 음향 신호로 확인하는 앱입니다.
 
-사용자가 직접 짧은 음성을 녹음하면 앱은 HNR, HF Ratio, CPPS 스타일의 켑스트럼 신호를 계산하고, 이를 바탕으로 사람 음성 또는 AI 생성 음성처럼 들리는지 신뢰도 점수와 함께 보여줍니다.
+사용자가 직접 짧은 음성을 녹음하면 앱은 HNR, HF Ratio, CPPS 스타일의 켑스트럼 신호, F0 변화, 유성 비율, 경량 스펙트럼 신호를 계산하고, 이를 바탕으로 사람 음성 또는 AI 생성 음성처럼 들리는지 신뢰도 점수와 함께 보여줍니다.
 
 주요 기능:
 
 - 수상한 음성 샘플 녹음
 - 기기 내 음향 신호 분석
-- HNR, HF Ratio, CPPS 스타일 지표 표시
+- HNR, HF Ratio, CPPS 스타일, F0 변화, 유성 비율, 스펙트럼 지표 표시
 - AI 음성 가능성 추정 및 신뢰도 표시
 - 영어/한국어 화면 지원
 - 계정 없이 사용

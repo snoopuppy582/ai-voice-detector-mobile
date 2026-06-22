@@ -1,18 +1,32 @@
 # AI Voice Scam Detector
 
-AI Voice Scam Detector is a multilingual Android MVP for checking short voice samples with on-device acoustic signals.
+AI Voice Scam Detector is a multilingual Android app for checking suspicious short voice samples with on-device acoustic signals.
 
-The app records a short microphone sample, calculates lightweight HNR, HF Ratio, and CPPS-style cepstral features on the device, and shows an AI voice estimate with a confidence score. The result is an acoustic estimate, not legal, medical, or security proof.
+The app records a microphone sample, analyzes it locally, and returns an AI voice estimate with a confidence score. It is designed as a lightweight scam/deepfake audio checker, not as legal evidence, identity verification, medical advice, or a guaranteed detector.
 
 ## Current Scope
 
 - Expo SDK 56 / React Native 0.85 Android app
 - `expo-audio` PCM microphone stream
-- On-device HNR, HF Ratio, CPPS-style cepstral signal calculation
-- English and Korean UI toggle
-- No account requirement
-- No server upload in the MVP
-- Google Play store assets generated under `store-assets/`
+- On-device acoustic analysis only
+- English and Korean interface
+- No account, ads, analytics, crash SDK, cloud inference, or server upload in the current MVP
+- Google Play assets under `store-assets/`
+
+## Acoustic Signals
+
+The current heuristic combines several lightweight features:
+
+- HNR-style harmonicity
+- HF Ratio
+- CPPS-style cepstral peak signal
+- F0 variation and range
+- Voiced-frame ratio
+- Spectral flatness
+- Spectral centroid
+- Zero-crossing rate
+
+These signals are combined conservatively. There is no hard rule such as `F0 std < 10 Hz means AI voice`; F0 variation is only a weak supporting signal because speaker, language, phone microphone, codec, noise, and speaking style can change it heavily.
 
 ## Run
 
@@ -27,13 +41,13 @@ For Android:
 npm run android
 ```
 
-This app needs a real Android device or an emulator with microphone input. Real device testing is preferred because Android emulator microphone behavior is not reliable enough for voice quality checks.
+A real Android device is preferred. Emulator microphone behavior is often unreliable for voice-quality testing.
 
 ## Verify
 
 ```bash
 node --check App.js
-npx expo-doctor
+npm run doctor
 npx expo export --platform android --output-dir dist-android
 ```
 
@@ -46,6 +60,8 @@ npm run build:aab
 
 - `build:apk`: internal install/test APK
 - `build:aab`: Google Play Android App Bundle
+
+The latest release candidate and hashes are tracked in `docs/BUILD_NOTES.md`.
 
 ## Store Assets
 
@@ -64,6 +80,16 @@ Regenerate:
 python store-assets/source/render_store_assets.py
 ```
 
+## Documentation Map
+
+- `READCODEX.md`: handoff instructions for future Codex sessions
+- `docs/BUILD_NOTES.md`: release build IDs, local artifacts, hashes, verification status
+- `docs/PLAY_CONSOLE_LAUNCH_GUIDE.md`: Play Console submission steps
+- `docs/STORE_LISTING_DRAFT.md`: English/Korean listing copy
+- `docs/PRIVACY_POLICY.md` and `docs/privacy-policy.html`: privacy policy source and public page
+- `store-assets/STORE_ASSETS_MANIFEST.md`: image asset inventory
+
 ## Important Limitation
 
-HNR, HF Ratio, and CPPS-style acoustic signals can be useful clues, but they cannot prove whether a voice is AI-generated. The app intentionally uses estimate/confidence language and avoids guaranteed detection claims.
+The app is an acoustic estimate tool. Synthetic voice detection research generally uses normalized feature sets and classifiers, not one absolute threshold. Keep copy, UI, and Play Store text in estimate/probability language.
+
