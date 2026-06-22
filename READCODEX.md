@@ -18,8 +18,8 @@ Improve AI Voice Scam Detector as an English-first, globally targeted Android ap
 
 - App name: `AI Voice Scam Detector`
 - Package: `com.snoopuppy582.aivoicedetector`
-- Current tracked versionCode before the next build: `4`
-- Latest published code commit at last handoff: check `git log -1 --oneline`
+- Current tracked versionCode before the next build: `5`
+- Latest published code commit at last handoff: `9f18e33 Improve acoustic heuristic and add Codex handoff docs`
 - Privacy URL: `https://snoopuppy582.github.io/ai-voice-detector-mobile/privacy-policy.html`
 - GitHub: `https://github.com/snoopuppy582/ai-voice-detector-mobile`
 
@@ -115,4 +115,3 @@ If regenerating images:
 - Avoid `100% accurate`, `guaranteed`, `proof`, `legal evidence`, or official-agency implications.
 - Export feature graphic/screenshots as RGB/no-alpha Play-compatible files.
 - Keep app icon 512x512 PNG under 1024KB.
-

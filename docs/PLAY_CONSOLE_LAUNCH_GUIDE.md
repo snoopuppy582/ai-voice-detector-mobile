@@ -13,7 +13,7 @@
 
 Current upload target:
 
-`builds/AI_Voice_Scam_Detector_production_v4.aab`
+`builds/AI_Voice_Scam_Detector_production_v5.aab`
 
 Build AAB:
 
