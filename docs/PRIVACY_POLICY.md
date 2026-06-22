@@ -1,8 +1,8 @@
-# AI Voice Detector Privacy Policy
+# AI Voice Scam Detector Privacy Policy
 
 Effective date: June 22, 2026
 
-AI Voice Detector is a mobile app developed by Moon Geonho.
+AI Voice Scam Detector is a mobile app developed by Moon Geonho.
 
 This policy explains how the app handles microphone audio and analysis results.
 
@@ -12,7 +12,7 @@ The current MVP processes short voice samples on the user's Android device. The 
 
 ## Data The App Accesses
 
-AI Voice Detector may access:
+AI Voice Scam Detector may access:
 
 - Microphone audio when the user starts recording
 - Temporary PCM audio buffers needed to calculate acoustic signals
@@ -62,7 +62,7 @@ Email: mnb0968@naver.com
 
 시행일: 2026년 6월 22일
 
-AI Voice Detector는 문건호가 개발한 모바일 앱입니다.
+AI Voice Scam Detector는 문건호가 개발한 모바일 앱입니다.
 
 이 문서는 앱이 마이크 음성과 분석 결과를 어떻게 처리하는지 설명합니다.
 
@@ -72,7 +72,7 @@ AI Voice Detector는 문건호가 개발한 모바일 앱입니다.
 
 ## 앱이 접근하는 데이터
 
-AI Voice Detector는 다음 데이터에 접근할 수 있습니다.
+AI Voice Scam Detector는 다음 데이터에 접근할 수 있습니다.
 
 - 사용자가 녹음 기능을 시작했을 때의 마이크 음성
 - 음향 신호 계산에 필요한 임시 PCM 오디오 버퍼

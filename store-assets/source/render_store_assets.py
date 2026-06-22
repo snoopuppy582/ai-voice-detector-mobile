@@ -145,14 +145,15 @@ def make_feature_graphic() -> None:
         x += w + 14
 
     rounded_rect(draw, (585, 78, 938, 386), radius=30, fill=(247, 250, 252, 242), outline=(137, 221, 240, 180), width=2)
-    draw.text((615, 112), "AI Voice Detector", font=font(25, True), fill=INK)
+    draw.text((615, 112), "AI Voice Scam Detector", font=font(23, True), fill=INK)
     draw_wave(draw, 615, 170, 292, 86, color=CYAN, bars=24, phase=1.0)
     rounded_rect(draw, (615, 282, 755, 344), radius=16, fill=(230, 247, 250, 255), outline=(189, 226, 234, 255))
     rounded_rect(draw, (772, 282, 912, 344), radius=16, fill=(241, 248, 237, 255), outline=(213, 235, 197, 255))
     draw.text((635, 297), "Likely AI", font=font(19, True), fill=CORAL)
     draw.text((792, 297), "78%", font=font(22, True), fill=INK)
-    bg.convert("RGB").save(FEATURE_DIR / "feature_graphic_1024x500.jpg", quality=94)
-    bg.save(FEATURE_DIR / "feature_graphic_1024x500.png")
+    bg_rgb = bg.convert("RGB")
+    bg_rgb.save(FEATURE_DIR / "feature_graphic_1024x500.jpg", quality=94)
+    bg_rgb.save(FEATURE_DIR / "feature_graphic_1024x500.png")
 
 
 def draw_phone_ui(draw, title, caption, mode):
@@ -162,19 +163,19 @@ def draw_phone_ui(draw, title, caption, mode):
 
     x, y, w, h = 70, 240, 940, 1510
     rounded_rect(draw, (x, y, x + w, y + h), radius=30, fill=PANEL, outline=LINE, width=2)
-    draw.text((x + 46, y + 44), "AI Voice Detector", font=font(42, True), fill=INK)
+    draw.text((x + 46, y + 44), "AI Voice Scam Detector", font=font(38, True), fill=INK)
     draw.text((x + 48, y + 98), "On-device acoustic estimate", font=font(25, True), fill=TEAL)
 
     if mode == "record":
-        draw.text((x + 46, y + 178), "Record a voice sample", font=font(34, True), fill=INK)
-        draw.text((x + 46, y + 226), "Speak naturally for 3-8 seconds.", font=font(24), fill=MUTED)
+        draw.text((x + 46, y + 178), "Is this voice real or AI?", font=font(34, True), fill=INK)
+        draw.text((x + 46, y + 226), "Record 3-8 seconds to check scam risk.", font=font(24), fill=MUTED)
         draw_wave(draw, x + 70, y + 340, w - 140, 220, color=CYAN, bars=32, phase=0.2)
         draw.ellipse((x + 330, y + 650, x + 610, y + 930), fill=BLUE)
         draw.ellipse((x + 408, y + 728, x + 532, y + 852), fill=(255, 255, 255, 255))
-        draw.text((x + 348, y + 980), "Start recording", font=font(34, True), fill=INK)
+        draw.text((x + 348, y + 968), "Start recording", font=font(34, True), fill=INK)
         rows = [("Processed on device", "No account required"), ("Samples clear on new recording", "Privacy-first flow")]
     elif mode == "signals":
-        draw.text((x + 46, y + 176), "Analyzing voice signals", font=font(34, True), fill=INK)
+        draw.text((x + 46, y + 176), "Check voice notes and samples", font=font(34, True), fill=INK)
         draw_wave(draw, x + 70, y + 250, w - 140, 170, color=CYAN, bars=36, phase=1.2)
         metrics = [("HNR", "11.8 dB", CYAN), ("HF Ratio", "0.39", TEAL), ("CPPS", "9.4 dB", LIME)]
         px = x + 46
@@ -183,9 +184,9 @@ def draw_phone_ui(draw, title, caption, mode):
             draw.text((px + 24, y + 516), label, font=font(24, True), fill=MUTED)
             draw.text((px + 24, y + 560), value, font=font(40, True), fill=INK)
             px += 287
-        rows = [("Cepstral signal check", "Experimental CPPS-style signal"), ("Noise and high-frequency cues", "Used for the estimate")]
+        rows = [("Plain signal summary", "HNR, HF Ratio, and CPPS-style cues"), ("Noise and high-frequency cues", "Used for the estimate")]
     elif mode == "result":
-        draw.text((x + 46, y + 176), "Get an instant estimate", font=font(34, True), fill=INK)
+        draw.text((x + 46, y + 176), "See a clear confidence score", font=font(34, True), fill=INK)
         rounded_rect(draw, (x + 46, y + 250, x + w - 46, y + 530), radius=24, fill=(255, 246, 246, 255), outline=(244, 206, 206, 255))
         draw.text((x + 86, y + 296), "Likely AI voice", font=font(54, True), fill=CORAL)
         draw.text((x + 88, y + 370), "Confidence 78%", font=font(30, True), fill=INK)
@@ -198,20 +199,20 @@ def draw_phone_ui(draw, title, caption, mode):
             draw.text((px + 22, y + 633), label, font=font(24, True), fill=MUTED)
             draw.text((px + 22, y + 678), value, font=font(36, True), fill=INK)
             px += 287
-        rows = [("Estimate only", "May be incorrect"), ("Verify important messages", "Call the person through another channel")]
+        rows = [("Estimate only", "May be incorrect"), ("Verify another way", "Call the person through a trusted channel")]
     else:
         draw.text((x + 46, y + 176), "Private by design", font=font(34, True), fill=INK)
         rows = [
             ("On-device processing", "Audio signals are analyzed locally"),
             ("No account required", "Use the detector without login"),
-            ("Delete samples anytime", "Start a new recording to clear samples"),
+            ("Samples clear on new recording", "Start a new recording to clear samples"),
             ("Estimate only", "Not legal, medical, or security proof"),
         ]
         draw.rounded_rectangle((x + 358, y + 310, x + 582, y + 534), radius=34, fill=(230, 247, 250, 255), outline=(161, 223, 236, 255), width=3)
         draw.rounded_rectangle((x + 432, y + 410, x + 508, y + 482), radius=12, fill=TEAL)
         draw.arc((x + 420, y + 348, x + 520, y + 454), 200, -20, fill=TEAL, width=12)
 
-    yy = y + 840
+    yy = y + 1080 if mode == "record" else y + 840
     if mode == "privacy":
         yy = y + 650
     for heading, body in rows:
@@ -226,23 +227,23 @@ def draw_phone_ui(draw, title, caption, mode):
 
 def make_screenshots() -> None:
     specs = [
-        ("01_record_1080x1920.png", "Record a voice sample", "record"),
-        ("02_signals_1080x1920.png", "Check acoustic signals", "signals"),
-        ("03_result_1080x1920.png", "Get an instant estimate", "result"),
+        ("01_record_1080x1920.png", "Is this voice real or AI?", "record"),
+        ("02_signals_1080x1920.png", "Check voice notes and samples", "signals"),
+        ("03_result_1080x1920.png", "See a clear confidence score", "result"),
         ("04_privacy_1080x1920.png", "Private by design", "privacy"),
     ]
     for filename, caption, mode in specs:
         im = Image.new("RGBA", (W, H), BG)
         draw = ImageDraw.Draw(im)
-        draw_phone_ui(draw, "AI Voice Detector", caption, mode)
-        im.save(SCREEN_DIR / filename)
+        draw_phone_ui(draw, "AI Voice Scam Detector", caption, mode)
+        im.convert("RGB").save(SCREEN_DIR / filename)
 
 
 def write_manifest() -> None:
     (STORE / "STORE_ASSETS_MANIFEST.md").write_text(
         "\n".join(
             [
-                "# AI Voice Detector Store Assets Manifest",
+                "# AI Voice Scam Detector Store Assets Manifest",
                 "",
                 "Generated assets for Google Play launch preparation.",
                 "",

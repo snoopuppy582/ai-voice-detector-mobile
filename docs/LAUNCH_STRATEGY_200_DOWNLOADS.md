@@ -14,13 +14,13 @@ The app should not compete with enterprise forensic deepfake tools. It should be
 - Users who receive suspicious voice notes through messengers
 - Students and creators comparing real and synthetic speech
 - Korean users familiar with voice phishing concerns
-- English-speaking users searching for AI voice detector tools
+- English-speaking users searching for AI Voice Scam Detector tools
 
 ## ASO Keywords
 
 English:
 
-- AI voice detector
+- AI Voice Scam Detector
 - AI voice checker
 - deepfake voice detector
 - deepfake audio detector
@@ -92,14 +92,14 @@ Target: 50-80 installs
 
 - Google Ads App Campaign, small budget
 - Test countries: US, Korea, India, Philippines, UK
-- Use keywords around AI voice detector / deepfake voice checker
+- Use keywords around AI Voice Scam Detector / deepfake voice checker
 - Stop if cost per install is too high
 
 ## Store Experiment Ideas
 
 Variant A:
 
-- Title: `AI Voice Detector`
+- Title: `AI Voice Scam Detector`
 - First screenshot: `Record a voice sample`
 
 Variant B:

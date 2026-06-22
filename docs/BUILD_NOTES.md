@@ -1,4 +1,4 @@
-# AI Voice Detector Build Notes
+# AI Voice Scam Detector Build Notes
 
 Generated on: 2026-06-22
 
@@ -12,7 +12,7 @@ Generated on: 2026-06-22
 
 ## Android App
 
-- App name: `AI Voice Detector`
+- App name: `AI Voice Scam Detector`
 - Package name: `com.snoopuppy582.aivoicedetector`
 - Version: `1.0.0`
 - Android versionCode: `2`

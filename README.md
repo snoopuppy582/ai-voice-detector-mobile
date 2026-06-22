@@ -1,6 +1,6 @@
-# AI Voice Detector
+# AI Voice Scam Detector
 
-AI Voice Detector is a multilingual Android MVP for checking short voice samples with on-device acoustic signals.
+AI Voice Scam Detector is a multilingual Android MVP for checking short voice samples with on-device acoustic signals.
 
 The app records a short microphone sample, calculates lightweight HNR, HF Ratio, and CPPS-style cepstral features on the device, and shows an AI voice estimate with a confidence score. The result is an acoustic estimate, not legal, medical, or security proof.
 

@@ -16,14 +16,16 @@ import { requestRecordingPermissionsAsync, setAudioModeAsync, useAudioStream } f
 const TARGET_SAMPLE_RATE = 16000;
 const MAX_SECONDS = 12;
 const MIN_SECONDS = 2;
+const STREAM_ENCODING = 'int16';
 
 const COPY = {
   en: {
     eyebrow: 'On-device acoustic estimate',
-    title: 'AI Voice Detector',
-    subtitle: 'Record a short voice sample and check HNR, HF Ratio, and CPPS signals on your Android device.',
+    title: 'AI Voice Scam Detector',
+    subtitle: 'Record a suspicious voice sample and check AI cloning risk with on-device acoustic signals.',
     record: 'Start recording',
     stop: 'Stop and analyze',
+    starting: 'Starting microphone',
     analyzing: 'Analyzing voice signals',
     ready: 'Ready',
     recording: 'Recording',
@@ -51,10 +53,11 @@ const COPY = {
   },
   ko: {
     eyebrow: '기기 내 음향 신호 추정',
-    title: 'AI Voice Detector',
-    subtitle: '짧은 음성을 녹음하고 Android 기기에서 HNR, HF Ratio, CPPS 신호를 확인합니다.',
+    title: 'AI Voice Scam Detector',
+    subtitle: '수상한 음성을 녹음하고 기기 내 음향 신호로 AI 클론 위험을 추정합니다.',
     record: '녹음 시작',
     stop: '중지 후 분석',
+    starting: '마이크 시작 중',
     analyzing: '음성 신호 분석 중',
     ready: '대기',
     recording: '녹음 중',
@@ -319,9 +322,19 @@ function mergeChunks(chunks, maxSamples) {
   return output;
 }
 
-function pcmFromBuffer(buffer) {
+function pcmFromBuffer(buffer, encoding = STREAM_ENCODING) {
   if (!buffer?.data) return new Float32Array(0);
-  return new Float32Array(buffer.data);
+  if (encoding === 'float32') {
+    if (buffer.data.byteLength % 4 !== 0) return new Float32Array(0);
+    return new Float32Array(buffer.data);
+  }
+  if (buffer.data.byteLength % 2 !== 0) return new Float32Array(0);
+  const int16 = new Int16Array(buffer.data);
+  const output = new Float32Array(int16.length);
+  for (let i = 0; i < int16.length; i += 1) {
+    output[i] = int16[i] / 32768;
+  }
+  return output;
 }
 
 function SignalCard({ label, value, unit }) {
@@ -352,6 +365,7 @@ export default function App() {
   const deviceLanguage = getLocales()?.[0]?.languageCode === 'ko' ? 'ko' : 'en';
   const [language, setLanguage] = useState(deviceLanguage);
   const [permissionReady, setPermissionReady] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -364,12 +378,14 @@ export default function App() {
   const sampleCountRef = useRef(0);
   const elapsedRef = useRef(0);
   const recordingRef = useRef(false);
+  const startSessionRef = useRef(0);
+  const startRequestedRef = useRef(false);
   const timerRef = useRef(null);
 
   const handleAudioBuffer = useCallback((buffer) => {
     if (!recordingRef.current) return;
     sampleRateRef.current = buffer.sampleRate || TARGET_SAMPLE_RATE;
-    const samples = pcmFromBuffer(buffer);
+    const samples = pcmFromBuffer(buffer, STREAM_ENCODING);
     if (!samples.length) return;
 
     const channels = Math.max(buffer.channels || 1, 1);
@@ -388,16 +404,36 @@ export default function App() {
     () => ({
       sampleRate: TARGET_SAMPLE_RATE,
       channels: 1,
-      encoding: 'float32',
+      encoding: STREAM_ENCODING,
       onBuffer: handleAudioBuffer,
     }),
     [handleAudioBuffer]
   );
   const { stream, isStreaming } = useAudioStream(streamOptions);
 
+  const clearRecordingTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const beginRecordingTimer = () => {
+    clearRecordingTimer();
+    const startedAt = Date.now();
+    timerRef.current = setInterval(() => {
+      const next = Math.min((Date.now() - startedAt) / 1000, MAX_SECONDS);
+      elapsedRef.current = Number(next.toFixed(1));
+      setElapsed(elapsedRef.current);
+      if (next >= MAX_SECONDS) {
+        stopRecording();
+      }
+    }, 100);
+  };
+
   useEffect(() => {
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      clearRecordingTimer();
       if (recordingRef.current) stream?.stop?.();
     };
   }, [stream]);
@@ -418,9 +454,13 @@ export default function App() {
   };
 
   const startRecording = async () => {
+    if (isStarting || recordingRef.current) return;
     const granted = permissionReady || (await ensurePermission());
     if (!granted) return;
 
+    const sessionId = startSessionRef.current + 1;
+    startSessionRef.current = sessionId;
+    startRequestedRef.current = true;
     chunksRef.current = [];
     sampleRateRef.current = TARGET_SAMPLE_RATE;
     sampleCountRef.current = 0;
@@ -428,36 +468,41 @@ export default function App() {
     setResult(null);
     setElapsed(0);
     setLevelBars(new Array(28).fill(0.12));
-    recordingRef.current = true;
-    setIsRecording(true);
-    timerRef.current = setInterval(() => {
-      elapsedRef.current = Number((elapsedRef.current + 0.1).toFixed(1));
-      if (elapsedRef.current >= MAX_SECONDS) {
-        setElapsed(MAX_SECONDS);
-        stopRecording();
-        return;
-      }
-      setElapsed(elapsedRef.current);
-    }, 100);
+    setIsStarting(true);
 
     try {
       await stream.start();
+      if (!startRequestedRef.current || startSessionRef.current !== sessionId) {
+        stream.stop();
+        return;
+      }
+      recordingRef.current = true;
+      setIsRecording(true);
+      beginRecordingTimer();
     } catch (error) {
-      recordingRef.current = false;
-      setIsRecording(false);
-      if (timerRef.current) clearInterval(timerRef.current);
       Alert.alert('Audio stream error', error?.message ?? 'Unable to start microphone stream.');
+    } finally {
+      if (startSessionRef.current === sessionId) {
+        setIsStarting(false);
+      }
     }
   };
 
   const stopRecording = async () => {
-    if (!recordingRef.current) return;
+    startRequestedRef.current = false;
+    if (isStarting && !recordingRef.current) {
+      setIsStarting(false);
+      try {
+        stream.stop();
+      } catch {
+        // Ignore stop races while the native stream is still starting.
+      }
+      return;
+    }
+    if (!recordingRef.current && !isStreaming) return;
     recordingRef.current = false;
     setIsRecording(false);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    clearRecordingTimer();
 
     try {
       await stream.stop();
@@ -490,14 +535,14 @@ export default function App() {
 
   const primaryAction = () => {
     if (isAnalyzing) return;
-    if (isRecording || isStreaming) {
+    if (isStarting || isRecording || isStreaming) {
       stopRecording();
     } else {
       startRecording();
     }
   };
 
-  const status = isAnalyzing ? copy.analyzing : isRecording ? copy.recording : copy.ready;
+  const status = isAnalyzing ? copy.analyzing : isStarting ? copy.starting : isRecording ? copy.recording : copy.ready;
   const resultTone = result?.label === 'likelyAi' ? '#D64545' : result?.label === 'likelyHuman' ? '#157F55' : '#B76B00';
 
   return (
@@ -531,9 +576,9 @@ export default function App() {
             disabled={isAnalyzing}
             activeOpacity={0.86}
           >
-            {isAnalyzing ? <ActivityIndicator color="#FFFFFF" /> : <View style={[styles.recordDot, isRecording ? styles.stopDot : null]} />}
+            {isAnalyzing || isStarting ? <ActivityIndicator color="#FFFFFF" /> : <View style={[styles.recordDot, isRecording ? styles.stopDot : null]} />}
           </TouchableOpacity>
-          <Text style={styles.actionText}>{isRecording ? copy.stop : copy.record}</Text>
+          <Text style={styles.actionText}>{isStarting ? copy.starting : isRecording ? copy.stop : copy.record}</Text>
           <Text style={styles.hint}>{copy.sampleHint}</Text>
         </View>
 

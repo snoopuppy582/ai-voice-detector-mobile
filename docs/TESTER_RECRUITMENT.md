@@ -19,7 +19,7 @@ Google Play may require a new personal developer account to run a closed test wi
 ```text
 Google Play 앱 출시 테스트 때문에 Android 테스터를 모집합니다.
 
-앱 이름: AI Voice Detector
+앱 이름: AI Voice Scam Detector
 기능: 짧은 음성을 녹음하면 AI 음성 가능성을 기기 내 음향 신호로 추정하는 앱입니다.
 
 참여 방법:
@@ -43,7 +43,7 @@ Google Play 앱 출시 테스트 때문에 Android 테스터를 모집합니다.
 ```text
 I am recruiting Android testers for a Google Play closed test.
 
-App: AI Voice Detector
+App: AI Voice Scam Detector
 What it does: Records a short voice sample and estimates AI voice risk using on-device acoustic signals.
 
 How to test:

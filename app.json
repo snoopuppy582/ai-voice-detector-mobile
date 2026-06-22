@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "AI Voice Detector",
+    "name": "AI Voice Scam Detector",
     "slug": "ai-voice-detector-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -17,18 +17,13 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      },
-      "permissions": [
-        "RECORD_AUDIO",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
-      ]
+      }
     },
     "plugins": [
       [
         "expo-audio",
         {
-          "microphonePermission": "Allow AI Voice Detector to analyze short voice samples on this device.",
+          "microphonePermission": "Allow AI Voice Scam Detector to analyze short voice samples on this device.",
           "recordAudioAndroid": true,
           "enableBackgroundRecording": false,
           "enableBackgroundPlayback": false

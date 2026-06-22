@@ -1,8 +1,8 @@
-# AI Voice Detector Play Console Launch Guide
+# AI Voice Scam Detector Play Console Launch Guide
 
 ## App Setup
 
-- App name: `AI Voice Detector`
+- App name: `AI Voice Scam Detector`
 - Package name: `com.snoopuppy582.aivoicedetector`
 - App type: App
 - Pricing: Free

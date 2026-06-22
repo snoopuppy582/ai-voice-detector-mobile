@@ -1,4 +1,4 @@
-# AI Voice Detector Store Assets Manifest
+# AI Voice Scam Detector Store Assets Manifest
 
 Generated assets for Google Play launch preparation.
 
