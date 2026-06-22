@@ -11,7 +11,7 @@
     },
     "android": {
       "package": "com.snoopuppy582.aivoicedetector",
-      "versionCode": 5,
+      "versionCode": 6,
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.READ_EXTERNAL_STORAGE",

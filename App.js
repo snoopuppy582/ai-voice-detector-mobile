@@ -19,6 +19,13 @@ const MAX_SECONDS = 12;
 const MIN_SECONDS = 2;
 const STREAM_ENCODING = 'int16';
 const PRIVACY_POLICY_URL = 'https://snoopuppy582.github.io/ai-voice-detector-mobile/privacy-policy.html';
+const HF_RATIO_CENTER = 0.24;
+const HF_RATIO_STRONG_EVIDENCE = 0.28;
+const HF_RATIO_HUMAN_EVIDENCE = 0.21;
+const AI_SCORE_CUTOFF = 60;
+const AI_SCORE_CUTOFF_WITHOUT_HF_EVIDENCE = 68;
+const HUMAN_SCORE_CUTOFF = 48;
+const HUMAN_SCORE_CUTOFF_WITH_LOW_HF = 54;
 
 const COPY = {
   en: {
@@ -334,16 +341,17 @@ function analyzeSamples(samples, sampleRate) {
   zcr /= Math.max(samples.length - 1, 1);
 
   const pitchMonotonyRisk =
-    voicedRatio > 0.25 ? clamp((22 - f0Std) * 0.45, 0, 7) + clamp((90 - f0Range) * 0.05, 0, 5) : 0;
-  const flatnessRisk = clamp((spectralFlatness - 0.22) * 35, -5, 8);
-  const centroidRisk = clamp((spectralCentroid - 1800) / 260, -4, 7);
+    voicedRatio > 0.35 ? clamp((14 - f0Std) * 0.25, 0, 3) + clamp((55 - f0Range) * 0.025, 0, 2) : 0;
+  const hfRatioRisk = clamp((hfRatio - HF_RATIO_CENTER) * 150, -32, 42);
+  const flatnessRisk = clamp((spectralFlatness - 0.26) * 28, -4, 7);
+  const centroidRisk = clamp((spectralCentroid - 2100) / 320, -4, 6);
 
   const aiScore = clamp(
     50 +
-      clamp((14 - hnr) * 2.2, -18, 28) +
-      clamp((hfRatio - 0.24) * 80, -18, 28) +
-      clamp((12 - cpps) * 1.8, -14, 20) +
-      clamp((zcr - 0.08) * 70, -8, 11) +
+      clamp((12 - hnr) * 1.55, -14, 20) +
+      hfRatioRisk +
+      clamp((10.5 - cpps) * 1.35, -10, 14) +
+      clamp((zcr - 0.09) * 55, -8, 10) +
       pitchMonotonyRisk +
       flatnessRisk +
       centroidRisk,
@@ -352,7 +360,11 @@ function analyzeSamples(samples, sampleRate) {
   );
 
   const lowVoicedPenalty = voicedRatio < 0.25 ? 12 : voicedRatio < 0.4 ? 6 : 0;
-  const label = lowVoicedPenalty >= 12 ? 'uncertain' : aiScore >= 58 ? 'likelyAi' : aiScore <= 42 ? 'likelyHuman' : 'uncertain';
+  const highFrequencyEvidence = hfRatio >= HF_RATIO_STRONG_EVIDENCE || spectralFlatness >= 0.35 || spectralCentroid >= 2500;
+  const lowHighFrequencyEvidence = hfRatio <= HF_RATIO_HUMAN_EVIDENCE && spectralFlatness < 0.32 && spectralCentroid < 2350;
+  const likelyAiCutoff = highFrequencyEvidence ? AI_SCORE_CUTOFF : AI_SCORE_CUTOFF_WITHOUT_HF_EVIDENCE;
+  const likelyHumanCutoff = lowHighFrequencyEvidence ? HUMAN_SCORE_CUTOFF_WITH_LOW_HF : HUMAN_SCORE_CUTOFF;
+  const label = lowVoicedPenalty >= 12 ? 'uncertain' : aiScore >= likelyAiCutoff ? 'likelyAi' : aiScore <= likelyHumanCutoff ? 'likelyHuman' : 'uncertain';
   const confidence = clamp(Math.round(54 + Math.abs(aiScore - 50) * 1.25 - lowVoicedPenalty), 45, 94);
   const bars = makeBarsFromSamples(samples, 28);
 
