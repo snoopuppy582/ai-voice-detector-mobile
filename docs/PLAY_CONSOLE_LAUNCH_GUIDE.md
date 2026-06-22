@@ -11,6 +11,10 @@
 
 ## Upload Build
 
+Current upload target:
+
+`builds/AI_Voice_Scam_Detector_production_v4.aab`
+
 Build AAB:
 
 ```bash
@@ -35,13 +39,11 @@ For a new personal developer account, prepare for 12 testers / 14 days before pr
 
 ## Privacy Policy
 
-Use the public URL after GitHub Pages is prepared:
+Use this public URL:
 
 `https://snoopuppy582.github.io/ai-voice-detector-mobile/privacy-policy.html`
 
-Temporary fallback if using the existing GitHub Pages repo:
-
-`https://snoopuppy582.github.io/voicetrace-mobile/ai-voice-detector-privacy-policy.html`
+The app also includes an in-app Privacy policy link.
 
 ## Data Safety Direction
 
@@ -50,6 +52,7 @@ For the current MVP:
 - Does your app collect or share user data? `No`, if this exact MVP is submitted without analytics, crash reporting, ads, cloud inference, remote logs, or any other SDK/network feature that sends user data off the device.
 - Microphone permission: used for app functionality.
 - Audio data: processed on device only.
+- Final AAB permissions: microphone/audio settings only, plus app-local dynamic receiver permission.
 - Account creation: not supported.
 - Data deletion: no account data; temporary sample clears on new recording.
 - Encryption in transit: not applicable for audio if no server upload.

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -17,6 +18,7 @@ const TARGET_SAMPLE_RATE = 16000;
 const MAX_SECONDS = 12;
 const MIN_SECONDS = 2;
 const STREAM_ENCODING = 'int16';
+const PRIVACY_POLICY_URL = 'https://snoopuppy582.github.io/ai-voice-detector-mobile/privacy-policy.html';
 
 const COPY = {
   en: {
@@ -43,6 +45,7 @@ const COPY = {
     cpps: 'CPPS',
     privacy: 'Processed on device. No account required.',
     delete: 'Samples are cleared when you start a new recording.',
+    privacyPolicy: 'Privacy policy',
     sampleHint: 'Speak naturally for 3-8 seconds in a quiet place.',
     tooShort: 'Record at least 2 seconds of speech.',
     tooQuiet: 'The sample is too quiet. Move closer to the microphone and try again.',
@@ -75,6 +78,7 @@ const COPY = {
     cpps: 'CPPS',
     privacy: '기기 내에서 처리됩니다. 계정은 필요하지 않습니다.',
     delete: '새 녹음을 시작하면 이전 샘플은 앱 메모리에서 지워집니다.',
+    privacyPolicy: '개인정보처리방침',
     sampleHint: '조용한 곳에서 3-8초 동안 자연스럽게 말하세요.',
     tooShort: '최소 2초 이상 음성을 녹음하세요.',
     tooQuiet: '음성이 너무 작습니다. 마이크에 조금 더 가까이 대고 다시 녹음하세요.',
@@ -542,6 +546,12 @@ export default function App() {
     }
   };
 
+  const openPrivacyPolicy = () => {
+    Linking.openURL(PRIVACY_POLICY_URL).catch(() => {
+      Alert.alert(copy.privacyPolicy, PRIVACY_POLICY_URL);
+    });
+  };
+
   const status = isAnalyzing ? copy.analyzing : isStarting ? copy.starting : isRecording ? copy.recording : copy.ready;
   const resultTone = result?.label === 'likelyAi' ? '#D64545' : result?.label === 'likelyHuman' ? '#157F55' : '#B76B00';
 
@@ -614,6 +624,9 @@ export default function App() {
           <Text style={styles.privacyTitle}>{copy.privacy}</Text>
           <Text style={styles.privacyBody}>{copy.delete}</Text>
           <Text style={styles.disclaimer}>{copy.disclaimer}</Text>
+          <TouchableOpacity style={styles.privacyLink} onPress={openPrivacyPolicy} activeOpacity={0.78}>
+            <Text style={styles.privacyLinkText}>{copy.privacyPolicy}</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -864,5 +877,16 @@ const styles = StyleSheet.create({
     color: '#D7E5EF',
     fontSize: 12,
     lineHeight: 18,
+  },
+  privacyLink: {
+    alignSelf: 'flex-start',
+    marginTop: 12,
+    paddingVertical: 6,
+  },
+  privacyLinkText: {
+    color: '#8DE1E8',
+    fontSize: 13,
+    fontWeight: '900',
+    textDecorationLine: 'underline',
   },
 });
