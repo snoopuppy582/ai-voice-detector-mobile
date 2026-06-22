@@ -19,7 +19,9 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
-        "RECORD_AUDIO"
+        "RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
     "plugins": [
@@ -38,6 +40,11 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "owner": "snoopy554"
+    "owner": "snoopy554",
+    "extra": {
+      "eas": {
+        "projectId": "7aed659b-578d-4b00-b5e7-1fb29fb305b5"
+      }
+    }
   }
 }
