@@ -18,8 +18,10 @@ Improve AI Voice Scam Detector as an English-first, globally targeted Android ap
 
 - App name: `AI Voice Scam Detector`
 - Package: `com.snoopuppy582.aivoicedetector`
-- Current tracked versionCode before the next build: `5`
-- Latest published code commit at last handoff: `9f18e33 Improve acoustic heuristic and add Codex handoff docs`
+- Current tracked versionCode: `6`
+- Latest scoring commit at last handoff: `6395e05 Tune detector scoring for male voice false positives`
+- Latest production AAB build ID: `08979062-065b-4dd4-b86d-47cc47e0d2ec`
+- Latest preview APK build ID: `832efd65-7542-429e-980f-b6ed975524ab`
 - Privacy URL: `https://snoopuppy582.github.io/ai-voice-detector-mobile/privacy-policy.html`
 - GitHub: `https://github.com/snoopuppy582/ai-voice-detector-mobile`
 
@@ -37,6 +39,13 @@ Current heuristic features:
 - Spectral flatness
 - Spectral centroid
 - ZCR
+
+v6 tuning notes:
+
+- HF Ratio is weighted more strongly than in v5.
+- Low HF Ratio with low spectral flatness/centroid can raise the human-voice cutoff, reducing normal male-voice false positives.
+- Without high-frequency/spectral evidence, the app now requires a higher score before showing `Likely AI voice`.
+- F0 monotony remains weak supporting evidence only, not a hard cutoff.
 
 Research guardrails:
 
