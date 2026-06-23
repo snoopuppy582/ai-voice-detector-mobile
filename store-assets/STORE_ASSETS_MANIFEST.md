@@ -1,4 +1,4 @@
-# AI Voice Scam Detector Store Assets Manifest
+# AI Voice Check Store Assets Manifest
 
 Generated assets for Google Play launch preparation.
 
@@ -8,8 +8,8 @@ Generated assets for Google Play launch preparation.
 - `feature_graphic/feature_graphic_1024x500.png`: 1024x500 feature graphic
 - `feature_graphic/feature_graphic_1024x500.jpg`: JPEG backup
 - `screenshots_phone/01_record_1080x1920.png`: phone screenshot 1
-- `screenshots_phone/02_signals_1080x1920.png`: phone screenshot 2
-- `screenshots_phone/03_result_1080x1920.png`: phone screenshot 3
+- `screenshots_phone/02_result_1080x1920.png`: phone screenshot 2
+- `screenshots_phone/03_signals_1080x1920.png`: phone screenshot 3
 - `screenshots_phone/04_privacy_1080x1920.png`: phone screenshot 4
 
 ## App assets replaced
@@ -19,5 +19,3 @@ Generated assets for Google Play launch preparation.
 - `assets/android-icon-foreground.png`
 - `assets/android-icon-background.png`
 - `assets/android-icon-monochrome.png`
-
-Feature graphic background source: `store-assets/source/feature_bg_imagegen.png`.

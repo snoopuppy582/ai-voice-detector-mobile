@@ -110,8 +110,8 @@ These were the latest EAS-signed artifacts before the SVM source change. They no
 - Feature graphic: `store-assets/feature_graphic/feature_graphic_1024x500.png`
 - Phone screenshots:
   - `store-assets/screenshots_phone/01_record_1080x1920.png`
-  - `store-assets/screenshots_phone/02_signals_1080x1920.png`
-  - `store-assets/screenshots_phone/03_result_1080x1920.png`
+  - `store-assets/screenshots_phone/02_result_1080x1920.png`
+  - `store-assets/screenshots_phone/03_signals_1080x1920.png`
   - `store-assets/screenshots_phone/04_privacy_1080x1920.png`
 
 ## Verification

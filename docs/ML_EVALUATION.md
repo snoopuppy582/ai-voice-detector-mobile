@@ -49,6 +49,33 @@ Entity-grouped stress CV for the same model:
 - AI precision / recall / F1: `0.9123` / `0.8667` / `0.8889`
 - Confusion matrix [TN, FP, FN, TP]: `215`, `5`, `8`, `52`
 
+## Follow-Up Local Audits
+
+A 2026-06-24 handoff summarized additional private local experiments. Treat these as context, not as deployed model changes, because their raw scripts/reports were generated in a separate validation workspace and are not committed here.
+
+Deep classifier comparison:
+
+- Best sentence split model was `wav2vec2 embedding + linear SVM` with balanced accuracy `0.9727` and AI F1 `0.9661`.
+- The same SSL-style approach generalized poorly on entity split: `wav2vec2 + SVM` entity balanced accuracy about `0.7674`; `WavLM + logistic` about `0.7394`.
+- Current app10 SVM remained strong on entity split at about `0.9220` balanced accuracy and `0.8889` AI F1.
+- Best candidate from that run was `wav2vec2 teacher -> app10 ridge student`, with entity balanced accuracy `0.9386` and AI F1 `0.9076`, but it was not app-exported or committed.
+- Tiny MLP distillation failed, and AASIST pretrained zero-shot performed poorly.
+
+Feature ablation audit:
+
+- `core4` alone was weak: entity-grouped balanced accuracy `0.8045`; 3-fold entity-grouped balanced accuracy `0.7841`.
+- `support6_only` was unexpectedly strong: entity-grouped balanced accuracy `0.9197`; 3-fold entity-grouped balanced accuracy `0.9129`.
+- `app10_all` remained strong: entity-grouped balanced accuracy `0.9235`; 3-fold entity-grouped balanced accuracy `0.9167`.
+- Best small support additions were `core4 + app_spectral_centroid` at 3-fold entity-grouped balanced accuracy `0.9098` and `core4 + app_zcr` at `0.9015`.
+- Drop-one variants suggested `app_f0_mean` and possibly `app_hf_ratio` may be removable, but this has not been exported or threshold-calibrated.
+
+Interpretation:
+
+- The six support features are not just random noise in the current dataset.
+- Some signal may reflect source or generator artifacts because the dataset has only three AI generator groups.
+- Do not claim all 10 features are independently meaningful.
+- For Play stability, keep the current app10 SVM unless the user explicitly asks for a new model export.
+
 ## Recommendations
 
 - Keep the SVM as the deployable model because it materially improves over the v6 heuristic while staying small enough for on-device JavaScript.

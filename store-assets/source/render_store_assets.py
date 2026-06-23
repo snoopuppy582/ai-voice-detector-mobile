@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -12,19 +12,18 @@ STORE = ROOT / "store-assets"
 ICON_DIR = STORE / "icons"
 FEATURE_DIR = STORE / "feature_graphic"
 SCREEN_DIR = STORE / "screenshots_phone"
-SOURCE_DIR = STORE / "source"
-
 W, H = 1080, 1920
 
-NAVY = (14, 28, 47, 255)
-INK = (16, 25, 38, 255)
+NAVY = (17, 24, 39, 255)
+INK = (17, 24, 39, 255)
 MUTED = (95, 112, 130, 255)
-CYAN = (0, 166, 214, 255)
+CYAN = (0, 184, 217, 255)
 BLUE = (14, 111, 255, 255)
 TEAL = (23, 122, 138, 255)
-LIME = (153, 220, 78, 255)
-CORAL = (214, 69, 69, 255)
-BG = (247, 250, 252, 255)
+VIOLET = (124, 58, 237, 255)
+LIME = (163, 230, 53, 255)
+CORAL = (255, 90, 95, 255)
+BG = (248, 250, 252, 255)
 PANEL = (255, 255, 255, 255)
 LINE = (220, 230, 238, 255)
 
@@ -81,19 +80,46 @@ def draw_mic(draw, cx, cy, scale=1.0, color=(255, 255, 255, 255), stroke=CYAN):
     draw.rounded_rectangle((cx - 48 * scale, cy + 91 * scale, cx + 48 * scale, cy + 104 * scale), radius=int(6 * scale), fill=stroke)
 
 
+def draw_ai_pulses(draw, x, y, width, height, color=VIOLET, blocks=10):
+    slot = width / blocks
+    for i in range(blocks):
+        level = 0.25 + 0.55 * ((i * 7) % 11) / 10
+        h = max(10, height * level)
+        bx = x + i * slot + slot * 0.2
+        draw.rounded_rectangle((bx, y + (height - h) / 2, bx + slot * 0.5, y + (height + h) / 2), radius=7, fill=color)
+
+
+def draw_signal_split_mark(draw, cx, cy, scale=1.0, mono=False):
+    main = (255, 255, 255, 255) if mono else (247, 253, 255, 255)
+    stroke = (255, 255, 255, 255) if mono else CYAN
+    accent = (255, 255, 255, 255) if mono else VIOLET
+    check = (255, 255, 255, 255) if mono else LIME
+    draw_wave(draw, cx - 300 * scale, cy + 118 * scale, 245 * scale, 100 * scale, color=stroke, bars=13, phase=0.45)
+    draw_ai_pulses(draw, cx + 72 * scale, cy + 118 * scale, 245 * scale, 100 * scale, color=accent, blocks=9)
+    draw_mic(draw, cx, cy - 34 * scale, 2.0 * scale, color=main, stroke=stroke)
+    draw.line(
+        (
+            cx - 70 * scale,
+            cy + 218 * scale,
+            cx - 22 * scale,
+            cy + 264 * scale,
+            cx + 92 * scale,
+            cy + 146 * scale,
+        ),
+        fill=check,
+        width=int(22 * scale),
+        joint="curve",
+    )
+
+
 def make_icon() -> None:
     size = 1024
-    im = Image.new("RGBA", (size, size), (6, 18, 34, 255))
+    im = Image.new("RGBA", (size, size), NAVY)
     draw = ImageDraw.Draw(im)
-    for r in range(0, size, 6):
-        alpha = int(120 * (1 - r / size))
-        draw.ellipse((size / 2 - r, size / 2 - r, size / 2 + r, size / 2 + r), outline=(0, 166, 214, max(alpha, 0)), width=2)
-
-    shield = [(512, 142), (762, 244), (720, 690), (512, 866), (304, 690), (262, 244)]
-    draw.polygon(shield, fill=(13, 72, 103, 255), outline=(0, 207, 255, 255))
-    draw.line(shield + [shield[0]], fill=(105, 229, 255, 255), width=16, joint="curve")
-    draw_mic(draw, 512, 420, 2.2, color=(236, 251, 255, 255), stroke=(0, 207, 255, 255))
-    draw_wave(draw, 215, 610, 594, 110, color=(153, 220, 78, 255), bars=22, phase=0.4)
+    draw.ellipse((-170, -150, 480, 500), fill=(0, 184, 217, 64))
+    draw.ellipse((540, 520, 1210, 1190), fill=(124, 58, 237, 66))
+    draw.ellipse((700, -80, 1080, 300), fill=(255, 90, 95, 50))
+    draw_signal_split_mark(draw, 512, 465, 1.0)
 
     out512 = im.resize((512, 512), Image.Resampling.LANCZOS)
     out512.save(ICON_DIR / "play_icon_512.png")
@@ -102,80 +128,63 @@ def make_icon() -> None:
 
     fg = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
     fg_draw = ImageDraw.Draw(fg)
-    fg_draw.polygon(shield, fill=(13, 72, 103, 255), outline=(0, 207, 255, 255))
-    fg_draw.line(shield + [shield[0]], fill=(105, 229, 255, 255), width=16, joint="curve")
-    draw_mic(fg_draw, 512, 420, 2.2, color=(236, 251, 255, 255), stroke=(0, 207, 255, 255))
-    draw_wave(fg_draw, 215, 610, 594, 110, color=(153, 220, 78, 255), bars=22, phase=0.4)
+    draw_signal_split_mark(fg_draw, 512, 465, 1.0)
     fg.save(ASSETS / "android-icon-foreground.png")
 
-    bg = Image.new("RGBA", (1024, 1024), (6, 18, 34, 255))
+    bg = Image.new("RGBA", (1024, 1024), NAVY)
     bg_draw = ImageDraw.Draw(bg)
-    for r in range(80, 1300, 32):
-        bg_draw.ellipse((512 - r, 512 - r, 512 + r, 512 + r), outline=(0, 107, 140, 60), width=4)
+    bg_draw.ellipse((-170, -150, 480, 500), fill=(0, 184, 217, 64))
+    bg_draw.ellipse((540, 520, 1210, 1190), fill=(124, 58, 237, 66))
+    bg_draw.ellipse((700, -80, 1080, 300), fill=(255, 90, 95, 50))
     bg.save(ASSETS / "android-icon-background.png")
 
     mono = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
     m = ImageDraw.Draw(mono)
-    m.polygon(shield, fill=(255, 255, 255, 255))
-    draw_mic(m, 512, 420, 2.2, color=(0, 0, 0, 255), stroke=(0, 0, 0, 255))
+    draw_signal_split_mark(m, 512, 465, 1.0, mono=True)
     mono.save(ASSETS / "android-icon-monochrome.png")
 
 
 def make_feature_graphic() -> None:
-    bg_path = SOURCE_DIR / "feature_bg_imagegen.png"
-    if bg_path.exists():
-        bg = Image.open(bg_path).convert("RGBA").resize((1024, 500), Image.Resampling.LANCZOS)
-    else:
-        bg = Image.new("RGBA", (1024, 500), (5, 18, 34, 255))
-    overlay = Image.new("RGBA", (1024, 500), (0, 0, 0, 0))
-    od = ImageDraw.Draw(overlay)
-    od.rectangle((0, 0, 1024, 500), fill=(3, 10, 22, 88))
-    od.rectangle((0, 0, 540, 500), fill=(3, 10, 22, 145))
-    bg.alpha_composite(overlay)
+    bg = Image.new("RGBA", (1024, 500), BG)
     draw = ImageDraw.Draw(bg)
+    draw.ellipse((-180, -220, 440, 400), fill=(0, 184, 217, 54))
+    draw.ellipse((620, 130, 1210, 720), fill=(124, 58, 237, 58))
+    draw.ellipse((740, -110, 1130, 280), fill=(255, 90, 95, 46))
+    draw.rounded_rectangle((556, 56, 940, 432), radius=42, fill=NAVY)
+    draw_signal_split_mark(draw, 748, 218, 0.55)
 
-    draw.text((58, 80), "AI voice estimate", font=font(54, True), fill=(255, 255, 255, 255))
-    draw.text((60, 154), "Pitch, cepstral and spectral cues.", font=font(25), fill=(197, 225, 237, 255))
-    chips = [("HNR", CYAN), ("F0 Var", TEAL), ("Flatness", LIME)]
-    x = 60
-    for label, color in chips:
-        w = int(draw.textlength(label, font=font(21, True))) + 34
-        draw.rounded_rectangle((x, 220, x + w, 260), radius=20, fill=(7, 22, 38, 255), outline=color, width=2)
-        centered_text(draw, (x, 220, x + w, 260), label, font(21, True), (255, 255, 255, 255))
-        x += w + 14
-
-    rounded_rect(draw, (585, 78, 938, 386), radius=30, fill=(247, 250, 252, 242), outline=(137, 221, 240, 180), width=2)
-    draw.text((615, 112), "AI Voice Scam Detector", font=font(23, True), fill=INK)
-    draw_wave(draw, 615, 170, 292, 86, color=CYAN, bars=24, phase=1.0)
-    rounded_rect(draw, (615, 282, 755, 344), radius=16, fill=(230, 247, 250, 255), outline=(189, 226, 234, 255))
-    rounded_rect(draw, (772, 282, 912, 344), radius=16, fill=(241, 248, 237, 255), outline=(213, 235, 197, 255))
-    draw.text((635, 297), "Likely AI", font=font(19, True), fill=CORAL)
-    draw.text((792, 297), "78%", font=font(22, True), fill=INK)
+    draw.text((58, 86), "Real voice or AI?", font=font(57, True), fill=INK)
+    draw.text((61, 166), "Check a short voice clip", font=font(30), fill=MUTED)
+    draw.rounded_rectangle((60, 244, 258, 292), radius=24, fill=(228, 248, 252, 255), outline=(174, 228, 239, 255), width=2)
+    centered_text(draw, (60, 244, 258, 292), "Estimate ready", font(22, True), TEAL)
+    draw.rounded_rectangle((276, 244, 438, 292), radius=24, fill=(243, 236, 255, 255), outline=(214, 196, 249, 255), width=2)
+    centered_text(draw, (276, 244, 438, 292), "On device", font(22, True), VIOLET)
+    draw.text((62, 354), "AI Voice Check", font=font(24, True), fill=INK)
     bg_rgb = bg.convert("RGB")
     bg_rgb.save(FEATURE_DIR / "feature_graphic_1024x500.jpg", quality=94)
     bg_rgb.save(FEATURE_DIR / "feature_graphic_1024x500.png")
 
 
-def draw_phone_ui(draw, title, caption, mode):
+def draw_phone_ui(draw, caption, mode):
     draw.rectangle((0, 0, W, H), fill=BG)
     draw.text((70, 64), caption, font=font(54, True), fill=INK)
     draw.text((72, 134), "AI voice estimate, not forensic proof", font=font(27), fill=MUTED)
 
     x, y, w, h = 70, 240, 940, 1510
     rounded_rect(draw, (x, y, x + w, y + h), radius=30, fill=PANEL, outline=LINE, width=2)
-    draw.text((x + 46, y + 44), "AI Voice Scam Detector", font=font(38, True), fill=INK)
+    draw.text((x + 46, y + 44), "AI Voice Check", font=font(38, True), fill=INK)
     draw.text((x + 48, y + 98), "On-device acoustic estimate", font=font(25, True), fill=TEAL)
 
     if mode == "record":
         draw.text((x + 46, y + 178), "Is this voice real or AI?", font=font(34, True), fill=INK)
-        draw.text((x + 46, y + 226), "Record 3-8 seconds to check scam risk.", font=font(24), fill=MUTED)
+        draw.text((x + 46, y + 226), "Record 3-8 seconds for an AI voice estimate.", font=font(24), fill=MUTED)
         draw_wave(draw, x + 70, y + 340, w - 140, 220, color=CYAN, bars=32, phase=0.2)
         draw.ellipse((x + 330, y + 650, x + 610, y + 930), fill=BLUE)
         draw.ellipse((x + 408, y + 728, x + 532, y + 852), fill=(255, 255, 255, 255))
         draw.text((x + 348, y + 968), "Start recording", font=font(34, True), fill=INK)
         rows = [("Processed on device", "No account required"), ("Samples clear on new recording", "Privacy-first flow")]
     elif mode == "signals":
-        draw.text((x + 46, y + 176), "Check voice notes and samples", font=font(34, True), fill=INK)
+        draw.text((x + 46, y + 176), "What changed the score?", font=font(34, True), fill=INK)
         draw_wave(draw, x + 70, y + 250, w - 140, 170, color=CYAN, bars=36, phase=1.2)
         metrics = [
             ("HNR", "11.8 dB", CYAN),
@@ -197,9 +206,9 @@ def draw_phone_ui(draw, title, caption, mode):
                 py += 150
         rows = [("Pitch and periodicity", "F0 variation, HNR, and CPPS-style cues"), ("Spectrum and noise cues", "HF ratio and flatness support the estimate")]
     elif mode == "result":
-        draw.text((x + 46, y + 176), "See a clear confidence score", font=font(34, True), fill=INK)
+        draw.text((x + 46, y + 176), "Instant estimate", font=font(34, True), fill=INK)
         rounded_rect(draw, (x + 46, y + 250, x + w - 46, y + 530), radius=24, fill=(255, 246, 246, 255), outline=(244, 206, 206, 255))
-        draw.text((x + 86, y + 296), "Likely AI voice", font=font(54, True), fill=CORAL)
+        draw.text((x + 86, y + 296), "Sounds AI-like", font=font(54, True), fill=CORAL)
         draw.text((x + 88, y + 370), "Confidence 78%", font=font(30, True), fill=INK)
         draw.rounded_rectangle((x + 86, y + 438, x + w - 86, y + 472), radius=17, fill=(235, 240, 245, 255))
         draw.rounded_rectangle((x + 86, y + 438, x + 86 + int((w - 172) * 0.78), y + 472), radius=17, fill=CORAL)
@@ -223,9 +232,10 @@ def draw_phone_ui(draw, title, caption, mode):
             ("Samples clear on new recording", "Start a new recording to clear samples"),
             ("Estimate only", "Not legal, medical, or security proof"),
         ]
-        draw.rounded_rectangle((x + 358, y + 310, x + 582, y + 534), radius=34, fill=(230, 247, 250, 255), outline=(161, 223, 236, 255), width=3)
-        draw.rounded_rectangle((x + 432, y + 410, x + 508, y + 482), radius=12, fill=TEAL)
-        draw.arc((x + 420, y + 348, x + 520, y + 454), 200, -20, fill=TEAL, width=12)
+        draw.rounded_rectangle((x + 374, y + 300, x + 566, y + 560), radius=34, fill=(230, 247, 250, 255), outline=(161, 223, 236, 255), width=3)
+        draw.rounded_rectangle((x + 414, y + 344, x + 526, y + 516), radius=24, fill=PANEL, outline=(161, 223, 236, 255), width=3)
+        draw_wave(draw, x + 432, y + 406, 76, 48, color=CYAN, bars=7, phase=0.3)
+        draw.line((x + 436, y + 474, x + 460, y + 498, x + 508, y + 444), fill=LIME, width=10, joint="curve")
 
     yy = y + 1080 if mode == "record" else y + 840
     if mode == "result":
@@ -244,15 +254,15 @@ def draw_phone_ui(draw, title, caption, mode):
 
 def make_screenshots() -> None:
     specs = [
-        ("01_record_1080x1920.png", "Is this voice real or AI?", "record"),
-        ("02_signals_1080x1920.png", "Check voice notes and samples", "signals"),
-        ("03_result_1080x1920.png", "See a clear confidence score", "result"),
-        ("04_privacy_1080x1920.png", "Private by design", "privacy"),
+        ("01_record_1080x1920.png", "Real or AI?", "record"),
+        ("02_result_1080x1920.png", "Instant estimate", "result"),
+        ("03_signals_1080x1920.png", "What changed the score?", "signals"),
+        ("04_privacy_1080x1920.png", "Private by default", "privacy"),
     ]
     for filename, caption, mode in specs:
         im = Image.new("RGBA", (W, H), BG)
         draw = ImageDraw.Draw(im)
-        draw_phone_ui(draw, "AI Voice Scam Detector", caption, mode)
+        draw_phone_ui(draw, caption, mode)
         im.convert("RGB").save(SCREEN_DIR / filename)
 
 
@@ -260,7 +270,7 @@ def write_manifest() -> None:
     (STORE / "STORE_ASSETS_MANIFEST.md").write_text(
         "\n".join(
             [
-                "# AI Voice Scam Detector Store Assets Manifest",
+                "# AI Voice Check Store Assets Manifest",
                 "",
                 "Generated assets for Google Play launch preparation.",
                 "",
@@ -270,8 +280,8 @@ def write_manifest() -> None:
                 "- `feature_graphic/feature_graphic_1024x500.png`: 1024x500 feature graphic",
                 "- `feature_graphic/feature_graphic_1024x500.jpg`: JPEG backup",
                 "- `screenshots_phone/01_record_1080x1920.png`: phone screenshot 1",
-                "- `screenshots_phone/02_signals_1080x1920.png`: phone screenshot 2",
-                "- `screenshots_phone/03_result_1080x1920.png`: phone screenshot 3",
+                "- `screenshots_phone/02_result_1080x1920.png`: phone screenshot 2",
+                "- `screenshots_phone/03_signals_1080x1920.png`: phone screenshot 3",
                 "- `screenshots_phone/04_privacy_1080x1920.png`: phone screenshot 4",
                 "",
                 "## App assets replaced",
@@ -281,8 +291,6 @@ def write_manifest() -> None:
                 "- `assets/android-icon-foreground.png`",
                 "- `assets/android-icon-background.png`",
                 "- `assets/android-icon-monochrome.png`",
-                "",
-                "Feature graphic background source: `store-assets/source/feature_bg_imagegen.png`.",
                 "",
             ]
         ),
