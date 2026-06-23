@@ -19,13 +19,48 @@ const MAX_SECONDS = 12;
 const MIN_SECONDS = 2;
 const STREAM_ENCODING = 'int16';
 const PRIVACY_POLICY_URL = 'https://snoopuppy582.github.io/ai-voice-detector-mobile/privacy-policy.html';
-const HF_RATIO_CENTER = 0.24;
-const HF_RATIO_STRONG_EVIDENCE = 0.28;
-const HF_RATIO_HUMAN_EVIDENCE = 0.21;
-const AI_SCORE_CUTOFF = 60;
-const AI_SCORE_CUTOFF_WITHOUT_HF_EVIDENCE = 68;
-const HUMAN_SCORE_CUTOFF = 48;
-const HUMAN_SCORE_CUTOFF_WITH_LOW_HF = 54;
+const LINEAR_SVM_MODEL = {
+  // Order: hnr, hfRatio, cpps, f0Mean, f0Std, f0Range, voicedRatio, spectralFlatness, spectralCentroid, zcr.
+  means: [
+    2.096359419744551,
+    0.0008997698195521911,
+    9.110353300437263,
+    130.11837626518235,
+    31.26317939756632,
+    140.33247919559972,
+    0.8450357969046987,
+    0.0024928983493653824,
+    426.75571322590844,
+    0.08859856559905437,
+  ],
+  scales: [
+    1.5919866357292574,
+    0.0015051045990674208,
+    0.3465518509317387,
+    23.28621418602766,
+    18.426816099091567,
+    88.76593264088487,
+    0.09518580414336397,
+    0.003939684101367465,
+    187.19002125558325,
+    0.03443683069697528,
+  ],
+  weights: [
+    -0.33214132502551663,
+    0.057457366679561375,
+    -0.7332251104266105,
+    0.22173994497970312,
+    0.05767594931937886,
+    -0.27867417951575907,
+    0.20180398397140537,
+    0.5907033981017875,
+    0.7255058848245302,
+    0.6631755473620784,
+  ],
+  intercept: -0.9202382765063358,
+  humanDecisionCutoff: -0.5,
+  aiDecisionCutoff: 0,
+};
 
 const COPY = {
   en: {
@@ -130,6 +165,41 @@ function nextPowerOfTwo(value) {
   let power = 1;
   while (power < value) power <<= 1;
   return power;
+}
+
+function scoreWithLinearSvm(features) {
+  const values = [
+    features.hnr,
+    features.hfRatio,
+    features.cpps,
+    features.f0Mean,
+    features.f0Std,
+    features.f0Range,
+    features.voicedRatio,
+    features.spectralFlatness,
+    features.spectralCentroid,
+    features.zcr,
+  ];
+  let decision = LINEAR_SVM_MODEL.intercept;
+  values.forEach((value, index) => {
+    const scale = LINEAR_SVM_MODEL.scales[index] || 1;
+    decision += ((value - LINEAR_SVM_MODEL.means[index]) / scale) * LINEAR_SVM_MODEL.weights[index];
+  });
+
+  const aiScore = clamp(Math.round(100 / (1 + Math.exp(-4 * (decision + 0.25)))), 4, 96);
+  const nearestBoundaryDistance =
+    decision >= LINEAR_SVM_MODEL.aiDecisionCutoff
+      ? decision - LINEAR_SVM_MODEL.aiDecisionCutoff
+      : decision <= LINEAR_SVM_MODEL.humanDecisionCutoff
+        ? LINEAR_SVM_MODEL.humanDecisionCutoff - decision
+        : 0;
+  const confidence = clamp(Math.round(56 + Math.min(nearestBoundaryDistance * 30, 38)), 45, 94);
+
+  return {
+    decision,
+    aiScore,
+    confidence,
+  };
 }
 
 function fft(real, imag, inverse = false) {
@@ -340,38 +410,34 @@ function analyzeSamples(samples, sampleRate) {
   }
   zcr /= Math.max(samples.length - 1, 1);
 
-  const pitchMonotonyRisk =
-    voicedRatio > 0.35 ? clamp((14 - f0Std) * 0.25, 0, 3) + clamp((55 - f0Range) * 0.025, 0, 2) : 0;
-  const hfRatioRisk = clamp((hfRatio - HF_RATIO_CENTER) * 150, -32, 42);
-  const flatnessRisk = clamp((spectralFlatness - 0.26) * 28, -4, 7);
-  const centroidRisk = clamp((spectralCentroid - 2100) / 320, -4, 6);
-
-  const aiScore = clamp(
-    50 +
-      clamp((12 - hnr) * 1.55, -14, 20) +
-      hfRatioRisk +
-      clamp((10.5 - cpps) * 1.35, -10, 14) +
-      clamp((zcr - 0.09) * 55, -8, 10) +
-      pitchMonotonyRisk +
-      flatnessRisk +
-      centroidRisk,
-    4,
-    96
-  );
-
   const lowVoicedPenalty = voicedRatio < 0.25 ? 12 : voicedRatio < 0.4 ? 6 : 0;
-  const highFrequencyEvidence = hfRatio >= HF_RATIO_STRONG_EVIDENCE || spectralFlatness >= 0.35 || spectralCentroid >= 2500;
-  const lowHighFrequencyEvidence = hfRatio <= HF_RATIO_HUMAN_EVIDENCE && spectralFlatness < 0.32 && spectralCentroid < 2350;
-  const likelyAiCutoff = highFrequencyEvidence ? AI_SCORE_CUTOFF : AI_SCORE_CUTOFF_WITHOUT_HF_EVIDENCE;
-  const likelyHumanCutoff = lowHighFrequencyEvidence ? HUMAN_SCORE_CUTOFF_WITH_LOW_HF : HUMAN_SCORE_CUTOFF;
-  const label = lowVoicedPenalty >= 12 ? 'uncertain' : aiScore >= likelyAiCutoff ? 'likelyAi' : aiScore <= likelyHumanCutoff ? 'likelyHuman' : 'uncertain';
-  const confidence = clamp(Math.round(54 + Math.abs(aiScore - 50) * 1.25 - lowVoicedPenalty), 45, 94);
+  const svm = scoreWithLinearSvm({
+    hnr,
+    hfRatio,
+    cpps,
+    f0Mean,
+    f0Std,
+    f0Range,
+    voicedRatio,
+    spectralFlatness,
+    spectralCentroid,
+    zcr,
+  });
+  const label =
+    lowVoicedPenalty >= 12
+      ? 'uncertain'
+      : svm.decision >= LINEAR_SVM_MODEL.aiDecisionCutoff
+        ? 'likelyAi'
+        : svm.decision <= LINEAR_SVM_MODEL.humanDecisionCutoff
+          ? 'likelyHuman'
+          : 'uncertain';
+  const confidence = clamp(svm.confidence - lowVoicedPenalty, 45, 94);
   const bars = makeBarsFromSamples(samples, 28);
 
   return {
     label,
     confidence,
-    aiScore: Math.round(aiScore),
+    aiScore: svm.aiScore,
     hnr: Number(hnr.toFixed(1)),
     hfRatio: Number(hfRatio.toFixed(2)),
     cpps: Number(cpps.toFixed(1)),

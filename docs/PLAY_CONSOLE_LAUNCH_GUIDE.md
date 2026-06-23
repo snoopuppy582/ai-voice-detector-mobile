@@ -13,12 +13,21 @@
 
 Current upload target:
 
-`builds/AI_Voice_Scam_Detector_production_v6.aab`
+`builds/AI_Voice_Scam_Detector_production_v7.aab`
+
+The local v7 file `builds/AI_Voice_Scam_Detector_local_v7.aab` is debug-signed and is only for local verification. Do not upload it to Play Console.
 
 Build AAB:
 
 ```bash
 npm run build:aab
+```
+
+Before running this command, log in to the Expo account that owns the EAS project:
+
+```bash
+npx eas-cli login
+npx eas-cli whoami
 ```
 
 Upload the generated `.aab` to:

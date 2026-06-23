@@ -15,13 +15,13 @@ The app records a microphone sample, analyzes it locally, and returns an AI voic
 
 ## Current Release Status
 
-Current release candidate: `v6`
+Current source candidate: `v7`
 
 - Android package: `com.snoopuppy582.aivoicedetector`
 - App version: `1.0.0`
-- Android versionCode: `6`
-- Play upload AAB: `builds/AI_Voice_Scam_Detector_production_v6.aab`
-- Direct install APK: `builds/AI_Voice_Scam_Detector_preview_v6.apk`
+- Android versionCode: `7`
+- Play upload AAB: rebuild after the v7 SVM calibration change
+- Direct install APK: rebuild after the v7 SVM calibration change
 - Public privacy policy: `https://snoopuppy582.github.io/ai-voice-detector-mobile/privacy-policy.html`
 - Release details and hashes: `docs/BUILD_NOTES.md`
 - Play Console quick guide: `docs/PLAY_CONSOLE_LAUNCH_GUIDE.md`
@@ -32,13 +32,13 @@ Completed so far:
 - Local microphone recording and PCM analysis
 - On-device feature extraction with no cloud/API inference
 - Google Play icon, feature graphic, screenshots, privacy policy, and listing draft
-- v6 scoring adjustment to reduce normal male-voice false positives by increasing HF Ratio influence, treating low HF Ratio as stronger human evidence, and requiring stronger high-frequency/spectral evidence before returning `Likely AI voice`
-- EAS production AAB and preview APK builds
-- Basic verification with `node --check App.js`, `npm run doctor`, Android export, privacy URL check, and AAB manifest permission inspection
+- v7 on-device linear soft-margin SVM calibration trained on local human/AI samples from `03_metrics_table.csv`
+- Previous v6 EAS production AAB and preview APK builds are documented in `docs/BUILD_NOTES.md`
+- v7 source verification with `node --check App.js`, `npm run doctor`, and Android export
 
 ## Acoustic Signals
 
-The current heuristic combines several lightweight features:
+The current classifier extracts several lightweight features on device:
 
 - HNR-style harmonicity
 - HF Ratio
@@ -49,17 +49,17 @@ The current heuristic combines several lightweight features:
 - Spectral centroid
 - Zero-crossing rate
 
-These signals are combined conservatively. There is no hard rule such as `F0 std < 10 Hz means AI voice`; F0 variation is only a weak supporting signal because speaker, language, phone microphone, codec, noise, and speaking style can change it heavily.
+These signals are normalized and combined by a compact linear soft-margin SVM embedded in `App.js`. The app still avoids hard rules such as `F0 std < 10 Hz means AI voice`; F0 variation is only one feature because speaker, language, phone microphone, codec, noise, and speaking style can change it heavily.
 
-## Next Work: Real-Sample SVM Calibration
+## Current SVM Calibration
 
-The next major improvement is to replace or calibrate the hand-tuned boundary with an SVM trained on real human and AI voice samples. Do this on the computer that has access to the sample dataset.
+The current v7 source replaces the hand-tuned boundary with a linear SVM trained on real human and AI voice samples. The evaluation artifacts are under `ml-eval/` in local development workspaces that have access to the sample dataset.
 
-Goal:
+Current goals:
 
-- Use the same feature family currently shown in the app.
-- Train a lightweight classifier that can still run on-device.
-- Reduce false positives on ordinary human voices, especially male voices.
+- Use the same feature family calculated by the app.
+- Keep the classifier small enough to run on-device as scaler values, weights, and an intercept.
+- Reduce false positives on ordinary human voices while improving AI recall versus the v6 heuristic.
 - Keep the UI language as an estimate, not a guaranteed detector.
 
 Recommended dataset setup:
@@ -75,7 +75,7 @@ Recommended feature CSV:
 file,label,hnr,hf_ratio,cpps,f0_mean,f0_std,f0_range,voiced_ratio,spectral_flatness,spectral_centroid,zcr,duration
 ```
 
-Suggested SVM workflow:
+Calibration workflow:
 
 1. Reproduce the app's feature extraction as closely as possible in Python or export features from test runs.
 2. Normalize features with `StandardScaler`.
@@ -146,6 +146,7 @@ python store-assets/source/render_store_assets.py
 
 - `READCODEX.md`: handoff instructions for future Codex sessions
 - `docs/BUILD_NOTES.md`: release build IDs, local artifacts, hashes, verification status
+- `docs/ML_EVALUATION.md`: local dataset validation summary for the embedded SVM
 - `docs/PLAY_CONSOLE_LAUNCH_GUIDE.md`: Play Console submission steps
 - `docs/STORE_LISTING_DRAFT.md`: English/Korean listing copy
 - `docs/PRIVACY_POLICY.md` and `docs/privacy-policy.html`: privacy policy source and public page
