@@ -1,9 +1,12 @@
 node_modules/
 .expo/
+android/
 dist/
 dist-android/
 builds/
 web-build/
+ml-eval/
+.codex_*.png
 
 docs/
 server/

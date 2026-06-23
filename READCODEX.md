@@ -18,10 +18,10 @@ Improve AI Voice Scam Detector as an English-first, globally targeted Android ap
 
 - App name: `AI Voice Scam Detector`
 - Package: `com.snoopuppy582.aivoicedetector`
-- Current tracked versionCode: `6`
-- Latest scoring commit at last handoff: `6395e05 Tune detector scoring for male voice false positives`
-- Latest production AAB build ID: `08979062-065b-4dd4-b86d-47cc47e0d2ec`
-- Latest preview APK build ID: `832efd65-7542-429e-980f-b6ed975524ab`
+- Current release versionCode: `8`
+- Latest scoring change: v7 linear soft-margin SVM calibrated from `03_metrics_table.csv`
+- Latest EAS production AAB build ID: `4bb8379c-bdf6-48c0-a748-e434a547e03f`
+- Latest EAS preview APK build ID: not generated for v8 because the Expo Free plan Android build quota was exhausted
 - Privacy URL: `https://snoopuppy582.github.io/ai-voice-detector-mobile/privacy-policy.html`
 - GitHub: `https://github.com/snoopuppy582/ai-voice-detector-mobile`
 
@@ -29,7 +29,7 @@ If code changes after a release build, the existing AAB is no longer the true re
 
 ## Acoustic Engine Notes
 
-Current heuristic features:
+Current SVM feature inputs:
 
 - HNR-style harmonicity
 - HF Ratio
@@ -40,12 +40,12 @@ Current heuristic features:
 - Spectral centroid
 - ZCR
 
-v6 tuning notes:
+v7 calibration notes:
 
-- HF Ratio is weighted more strongly than in v5.
-- Low HF Ratio with low spectral flatness/centroid can raise the human-voice cutoff, reducing normal male-voice false positives.
-- Without high-frequency/spectral evidence, the app now requires a higher score before showing `Likely AI voice`.
-- F0 monotony remains weak supporting evidence only, not a hard cutoff.
+- The app embeds a compact linear soft-margin SVM as scaler means/stds, weights, an intercept, and tri-state thresholds.
+- Training/evaluation uses local `03_metrics_table.csv` plus app-aligned 16 kHz feature extraction from `analysis_wav_path`.
+- Current app thresholds are `likelyHuman` at decision `<= -0.5`, `likelyAi` at decision `>= 0`, and `uncertain` in between or for very low voiced ratio.
+- F0 variation remains one normalized feature, not a hard cutoff.
 
 Research guardrails:
 
