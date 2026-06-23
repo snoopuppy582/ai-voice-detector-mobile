@@ -18,10 +18,10 @@ Improve AI Voice Scam Detector as an English-first, globally targeted Android ap
 
 - App name: `AI Voice Scam Detector`
 - Package: `com.snoopuppy582.aivoicedetector`
-- Current source versionCode: `7`
-- Latest local scoring change: v7 linear soft-margin SVM calibrated from `03_metrics_table.csv`
-- Latest published EAS production AAB build ID before v7 source change: `08979062-065b-4dd4-b86d-47cc47e0d2ec`
-- Latest published EAS preview APK build ID before v7 source change: `832efd65-7542-429e-980f-b6ed975524ab`
+- Current release versionCode: `8`
+- Latest scoring change: v7 linear soft-margin SVM calibrated from `03_metrics_table.csv`
+- Latest EAS production AAB build ID: `4bb8379c-bdf6-48c0-a748-e434a547e03f`
+- Latest EAS preview APK build ID: not generated for v8 because the Expo Free plan Android build quota was exhausted
 - Privacy URL: `https://snoopuppy582.github.io/ai-voice-detector-mobile/privacy-policy.html`
 - GitHub: `https://github.com/snoopuppy582/ai-voice-detector-mobile`
 

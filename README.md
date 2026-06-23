@@ -15,13 +15,13 @@ The app records a microphone sample, analyzes it locally, and returns an AI voic
 
 ## Current Release Status
 
-Current source candidate: `v7`
+Current release candidate: `v8`
 
 - Android package: `com.snoopuppy582.aivoicedetector`
 - App version: `1.0.0`
-- Android versionCode: `7`
-- Play upload AAB: rebuild after the v7 SVM calibration change
-- Direct install APK: rebuild after the v7 SVM calibration change
+- Android versionCode: `8`
+- Play upload AAB: `builds/AI_Voice_Scam_Detector_production_v8.aab`
+- Direct install APK: v8 preview APK not generated because the Expo Free plan Android build quota was exhausted after the production AAB build
 - Public privacy policy: `https://snoopuppy582.github.io/ai-voice-detector-mobile/privacy-policy.html`
 - Release details and hashes: `docs/BUILD_NOTES.md`
 - Play Console quick guide: `docs/PLAY_CONSOLE_LAUNCH_GUIDE.md`
@@ -33,7 +33,7 @@ Completed so far:
 - On-device feature extraction with no cloud/API inference
 - Google Play icon, feature graphic, screenshots, privacy policy, and listing draft
 - v7 on-device linear soft-margin SVM calibration trained on local human/AI samples from `03_metrics_table.csv`
-- Previous v6 EAS production AAB and preview APK builds are documented in `docs/BUILD_NOTES.md`
+- Production v8 EAS AAB build is documented in `docs/BUILD_NOTES.md`
 - v7 source verification with `node --check App.js`, `npm run doctor`, and Android export
 
 ## Acoustic Signals
