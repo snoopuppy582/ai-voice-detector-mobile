@@ -18,8 +18,10 @@ Improve AI Voice Scam Detector as an English-first, globally targeted Android ap
 
 - App name: `AI Voice Scam Detector`
 - Package: `com.snoopuppy582.aivoicedetector`
-- Current tracked versionCode before the next build: `5`
-- Latest published code commit at last handoff: `9f18e33 Improve acoustic heuristic and add Codex handoff docs`
+- Current release versionCode: `8`
+- Latest scoring change: v7 linear soft-margin SVM calibrated from `03_metrics_table.csv`
+- Latest EAS production AAB build ID: `4bb8379c-bdf6-48c0-a748-e434a547e03f`
+- Latest EAS preview APK build ID: not generated for v8 because the Expo Free plan Android build quota was exhausted
 - Privacy URL: `https://snoopuppy582.github.io/ai-voice-detector-mobile/privacy-policy.html`
 - GitHub: `https://github.com/snoopuppy582/ai-voice-detector-mobile`
 
@@ -27,7 +29,7 @@ If code changes after a release build, the existing AAB is no longer the true re
 
 ## Acoustic Engine Notes
 
-Current heuristic features:
+Current SVM feature inputs:
 
 - HNR-style harmonicity
 - HF Ratio
@@ -37,6 +39,13 @@ Current heuristic features:
 - Spectral flatness
 - Spectral centroid
 - ZCR
+
+v7 calibration notes:
+
+- The app embeds a compact linear soft-margin SVM as scaler means/stds, weights, an intercept, and tri-state thresholds.
+- Training/evaluation uses local `03_metrics_table.csv` plus app-aligned 16 kHz feature extraction from `analysis_wav_path`.
+- Current app thresholds are `likelyHuman` at decision `<= -0.5`, `likelyAi` at decision `>= 0`, and `uncertain` in between or for very low voiced ratio.
+- F0 variation remains one normalized feature, not a hard cutoff.
 
 Research guardrails:
 
@@ -58,7 +67,10 @@ Useful source families to re-check:
 
 - `README.md`: public developer onboarding
 - `READCODEX.md`: Codex handoff and operating rules
-- `App.js`: app UI and acoustic engine
+- `App.js`: thin Expo entrypoint
+- `src/App.js`: app UI, recording flow, permissions, and result rendering
+- `src/audio/analysis.js`: on-device acoustic feature extraction
+- `src/model/linearSvmModel.js`: SVM scaler, weights, thresholds, and score mapping
 - `app.json`: Expo config, Android package, versionCode, blocked permissions
 - `docs/BUILD_NOTES.md`: release candidate truth source
 - `docs/PLAY_CONSOLE_LAUNCH_GUIDE.md`: Play Console procedure
@@ -81,7 +93,6 @@ Keep the repository easy to resume:
 Before final handoff:
 
 ```bash
-node --check App.js
 npm run doctor
 npx expo export --platform android --output-dir dist-android
 git status --short

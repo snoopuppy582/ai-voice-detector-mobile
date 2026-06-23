@@ -4,12 +4,15 @@
 node_modules/
 
 # Expo
+.codex-run/
 .expo/
 dist/
 dist-android/
 builds/
 web-build/
 expo-env.d.ts
+ml-eval/
+.venv-dl/
 
 # Native
 .kotlin/

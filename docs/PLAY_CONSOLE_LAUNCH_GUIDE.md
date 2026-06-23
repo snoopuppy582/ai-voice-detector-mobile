@@ -13,12 +13,29 @@
 
 Current upload target:
 
-`builds/AI_Voice_Scam_Detector_production_v5.aab`
+`builds/AI_Voice_Scam_Detector_production_v8.aab`
+
+This v8 AAB was built before the current source layout was refactored into `src/`. The classifier and app behavior are intended to match, but rebuild a production AAB before upload if you need exact source-to-artifact traceability from this folder.
+
+The local v7 file `builds/AI_Voice_Scam_Detector_local_v7.aab` is debug-signed and is only for local verification. Do not upload it to Play Console.
+
+Current production v8 build:
+
+- EAS build ID: `4bb8379c-bdf6-48c0-a748-e434a547e03f`
+- Artifact URL: `https://expo.dev/artifacts/eas/2fpH_vrm_XhDhoM9WbNKA6KKgStAD1ilLTgUwMycY_Q.aab`
+- SHA256: `43ED4E7DC550AC9E9C61126EE33AC15A8AF6D9FF682DB115F680662509703081`
 
 Build AAB:
 
 ```bash
 npm run build:aab
+```
+
+Before running this command, log in to the Expo account that owns the EAS project:
+
+```bash
+npx eas-cli login
+npx eas-cli whoami
 ```
 
 Upload the generated `.aab` to:
