@@ -2,12 +2,13 @@
 
 Updated: 2026-06-24
 
-Purpose: build an automated, legally safer pipeline for large-scale human-vs-AI voice model improvement. The immediate product problem is false positives on broadcast/YouTube/radio-style human speech.
+Purpose: build an automated pipeline for large-scale human-vs-AI voice model improvement. The immediate product problem is false positives on broadcast/YouTube/radio-style human speech.
 
 ## Non-Negotiable Guardrails
 
-- Do not build a YouTube/radio scraping downloader for arbitrary copyrighted content.
-- Do not train on platform content unless the license, permission, or dataset terms allow it.
+- YouTube/radio/broadcast data must be included in the research and hard-negative evaluation plan because it is the failing domain.
+- Keep platform-media data in a separate `research_only_platform_media` lane unless the license/permission is clear enough for release-model training.
+- Do not redistribute raw platform-media audio, derived clips, or transcript dumps.
 - Keep raw private voice samples out of git.
 - Store dataset provenance, license, consent status, and source URL/identifier for every sample.
 - Separate "AI voice detection" from "broadcast/compressed/processed speech detection"; the model must learn that broadcast processing can still be human.
@@ -62,12 +63,21 @@ Priority 2: owned or consented recordings
 - Friend/tester recordings with written consent.
 - Scripted recordings across phones, rooms, speakers, microphones, languages.
 
-Priority 3: platform media only with permission
+Priority 3: research-only platform/broadcast media
+
+- YouTube/radio/podcast/broadcast samples are required for false-positive diagnosis.
+- Treat this lane as internal research-only unless rights are cleared.
+- Store source URL, channel/program, timestamp, access date, and reason for inclusion.
+- Use it first as a hard-negative validation set. Promote it to training only after deciding the release risk is acceptable.
+- Prefer public-domain, Creative Commons, creator-permitted, or institutionally available sources where possible.
+
+Priority 4: fully cleared platform/broadcast media
 
 - Creator-provided clips with explicit permission.
-- Open-license podcasts/radio archives only if terms permit ML training or derived feature extraction.
+- Open-license podcasts/radio archives if terms permit ML training or derived feature extraction.
+- Public-domain or CC-licensed radio/audio archives.
 
-Do not use arbitrary YouTube/radio scraping as a default ingestion source.
+Practical stance: do not omit YouTube/radio/broadcast data from experiments. The model needs it. Instead, mark every such sample by risk tier and decide separately whether it can influence a Play-release model.
 
 ### AI Speech
 
@@ -92,6 +102,7 @@ Capture metadata:
 ```text
 sources/
   licensed_datasets/
+  research_only_platform_media/
   generated_tts/
   consented_recordings/
   processed_variants/
@@ -121,6 +132,7 @@ ml-data/
     common_voice/
     librispeech/
     asvspoof/
+    platform_media_research_only/
     generated_tts/
     consented_recordings/
   processed/
@@ -164,19 +176,19 @@ Do not commit:
 `sources.csv`
 
 ```text
-source_id,source_type,provider,dataset_name,license,terms_url,permission_status,download_method,notes
+source_id,source_type,provider,dataset_name,license,terms_url,permission_status,risk_tier,download_method,source_url,accessed_at,notes
 ```
 
 `clips.csv`
 
 ```text
-clip_id,source_id,path,label4,label_binary,speaker_id,source_group,language,duration_sec,sample_rate,channel_count,codec,created_at,license,consent_id
+clip_id,source_id,path,label4,label_binary,speaker_id,source_group,language,duration_sec,sample_rate,channel_count,codec,created_at,license,consent_id,risk_tier
 ```
 
 `segments.csv`
 
 ```text
-segment_id,clip_id,path,start_sec,end_sec,label4,label_binary,speaker_id,source_group,domain,processing_chain,rms_dbfs,snr_est,voiced_ratio
+segment_id,clip_id,path,start_sec,end_sec,label4,label_binary,speaker_id,source_group,domain,processing_chain,rms_dbfs,snr_est,voiced_ratio,risk_tier
 ```
 
 `splits.csv`
@@ -187,19 +199,29 @@ segment_id,split,split_strategy,heldout_group
 
 ## Processing Stages
 
-### 1. License And Provenance Gate
+### 1. License, Risk, And Provenance Gate
 
-Reject any source without a clear allowed use.
+Do not reject platform media automatically. Classify each source by risk tier and route it accordingly.
 
 Required states:
 
 - `allowed_public_dataset`
 - `allowed_generated`
 - `allowed_consent`
+- `research_only_platform_media`
 - `blocked_unknown`
-- `blocked_platform_terms`
 
-No audio enters `processed/` unless it passes this gate.
+Risk tiers:
+
+- `release_ok`: can influence the Play-release model.
+- `research_only`: can be used for diagnosis, threshold stress tests, and internal model experiments, but not redistributed.
+- `blocked`: do not ingest.
+
+Routing rule:
+
+- `release_ok` data can enter training, validation, and release export.
+- `research_only` data must enter hard-negative evaluation and can enter internal experimental training runs, but the run must be marked `not_release_cleared`.
+- `blocked` data is not processed.
 
 ### 2. Audio Normalization
 
@@ -267,6 +289,7 @@ Required splits:
 
 - `speaker_holdout`: unseen human speakers
 - `source_holdout`: unseen dataset/channel/source
+- `platform_media_holdout`: unseen YouTube/radio/podcast/broadcast sources
 - `tts_engine_holdout`: unseen AI engines/voices
 - `domain_holdout`: unseen processing chain
 - `playback_holdout`: unseen phone/speaker/room
@@ -290,6 +313,7 @@ Export:
 - weights/intercept or compact tree rules
 - thresholds
 - calibration metadata
+- training risk tier summary: how much `release_ok` vs `research_only` data influenced the run
 
 ### Better Offline Teacher Track
 
@@ -324,17 +348,21 @@ Minimum report per candidate:
 - Confusion matrix by domain:
   - human clean
   - human processed
+  - human platform/broadcast
   - AI clean
   - AI processed
 - False-positive rate on `human_processed`
+- False-positive rate on `research_only_platform_media`
 - Recall on `ai_processed`
 - Entity/source holdout balanced accuracy
+- Platform-media holdout balanced accuracy
 - Calibration metrics if showing probability
 - Android microphone smoke test
 
 Release block examples:
 
 - `human_processed` false positive rate too high.
+- YouTube/radio/broadcast human speech still gets labeled AI at high confidence.
 - One source/channel dominates feature importance.
 - AI recall only works for seen TTS engines.
 - Confidence remains high on uncertain/noisy audio.
@@ -374,14 +402,16 @@ Build only this first:
 
 1. Add `ml_pipeline/` scripts skeleton.
 2. Ingest Common Voice + LibriSpeech small subsets.
-3. Add 1-2 allowed in-the-wild/broadcast-like datasets or consented recordings.
-4. Generate compression/EQ/playback variants.
-5. Re-extract current app10 features.
-6. Train linear SVM/logistic regression.
-7. Report false positives on `human_processed`.
-8. Export only if false positives improve without destroying AI recall.
+3. Build a `research_only_platform_media` ingestion lane for YouTube/radio/podcast/broadcast human speech.
+4. Add 1-2 fully cleared in-the-wild/broadcast-like datasets or consented recordings if available.
+5. Generate compression/EQ/playback variants.
+6. Re-extract current app10 features.
+7. Train linear SVM/logistic regression in two runs:
+   - `release_cleared_only`
+   - `research_with_platform_media`
+8. Report false positives on `human_processed` and `research_only_platform_media`.
+9. Export only if false positives improve without destroying AI recall, and mark whether the export is release-cleared.
 
 ## Practical Warning
 
-More data will not automatically fix the app. If labels or source grouping are sloppy, the model will learn source artifacts instead of AI-vs-human speech. The most important automation feature is not downloading; it is provenance, grouping, and stress-split evaluation.
-
+More data will not automatically fix the app. If labels or source grouping are sloppy, the model will learn source artifacts instead of AI-vs-human speech. The most important automation feature is not downloading; it is provenance, risk tiering, grouping, and stress-split evaluation.
