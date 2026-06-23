@@ -34,6 +34,21 @@ Attempted post-refactor EAS production build on 2026-06-24:
 - The build did not start because the `snoopy554` Expo Free plan Android monthly build quota is exhausted until 2026-07-01.
 - `app.json` remains at versionCode `8` because no v9 production AAB exists.
 
+Local post-refactor Android build verification on 2026-06-24:
+
+- The first Gradle attempt under the OneDrive Korean-path workspace failed because the Windows Gradle wrapper resolved the non-ASCII path incorrectly and could not find `node_modules/@react-native/gradle-plugin`.
+- A detached verification worktree at `C:\codex_work\ai_voice_detector_mobile_latest_verify` was used to avoid the path encoding issue.
+- `npm install`
+- `npm run doctor`
+- `npx expo export --platform android --output-dir dist-android`
+- `npx expo prebuild --platform android --no-install`
+- `.\gradlew.bat assembleRelease bundleRelease` from `android/`
+- Local release AAB: `C:\codex_work\ai_voice_detector_mobile_latest_verify\android\app\build\outputs\bundle\release\app-release.aab`
+- Local release AAB SHA256: `639C44CC5C833F12F95038812F49644493E9A4830F22C5102CE3B008EF379691`
+- Local release APK: `C:\codex_work\ai_voice_detector_mobile_latest_verify\android\app\build\outputs\apk\release\app-release.apk`
+- Local release APK SHA256: `ACEA900B35888035D0C05CDFB58F267207C7EBD9DAF32447B60B36FF77D8E19D`
+- These local artifacts verify native compilation, but they are not the EAS Play upload artifact.
+
 ## Android App
 
 - App name: `AI Voice Scam Detector`
